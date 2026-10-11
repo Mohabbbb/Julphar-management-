@@ -1,0 +1,407 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#122f4d"><meta name="description" content="Julphar Sales Platform — orders, deals, items and accounts, saved directly."><style id="ap-v33">@@INCLUDE:css/ap-v33.css@@</style>
+</head><body class="is-loading">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"><style>@@INCLUDE:css/02.css@@</style>
+<title>Julphar Sales Platform</title>
+<a href="#mainContent" class="skip-link">Skip to main content</a>
+
+
+
+<script type="application/json" id="seed">{}</script>
+<script>@@INCLUDE:vendor/chart-4.4.1.min.js@@</script>
+<style>@@INCLUDE:css/03.css@@</style>
+
+<div class="shell">
+  <aside class="side">
+    <div class="logo"><span class="dot" id="dotSide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span> <span id="brandSide">Julphar Platform</span></div>
+    <nav id="sideNav" aria-label="Main menu">
+      <div class="nav-sec open" id="nav-today" role="group" aria-labelledby="nav-today-h">
+        <h2 class="nav-h" id="nav-today-h">Today</h2>
+        <button data-view="today" aria-current="true"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg></span> Today</button>
+      </div>
+      <div class="nav-sec" id="nav-sell" role="group" aria-labelledby="nav-sell-h">
+        <h2 class="nav-h" id="nav-sell-h">Sell</h2>
+        <button data-view="order"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h12v18l-2.5-1.5L13 21l-2.5-1.5L8 21l-2-1.5V3z"/><path d="M9.5 8h5M9.5 12h5M9.5 16h3" stroke-linecap="round"/></svg></span> New order</button>
+        <button data-view="orders"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></span> Orders</button>
+        <button data-view="forecast"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 17l5-5 4 4 8-9" stroke-linecap="round"/><path d="M15 7h5v5" stroke-linecap="round"/></svg></span> Reorder plan</button>
+      </div>
+      <div class="nav-sec" id="nav-stock" role="group" aria-labelledby="nav-stock-h">
+        <h2 class="nav-h" id="nav-stock-h">Stock</h2>
+        <button data-view="stock"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 9l9-5 9 5v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z"/><path d="M9 20v-7h6v7M3 9l9 5 9-5"/></svg></span> Stock</button>
+        <button data-view="import"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round"/></svg></span> Import Excel</button>
+      </div>
+      <div class="nav-sec" id="nav-customers" role="group" aria-labelledby="nav-customers-h">
+        <h2 class="nav-h" id="nav-customers-h">Customers &amp; prices</h2>
+        <button data-view="accounts"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 7h1.5M14.5 7h1.5M8 11h1.5M14.5 11h1.5M8 15h1.5M14.5 15h1.5" stroke-linecap="round"/></svg></span> Accounts</button>
+        <button data-view="pricing"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-7-7A2 2 0 0 1 3 12.2V5a2 2 0 0 1 2-2h7.2a2 2 0 0 1 1.4.6l7 7a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg></span> Pricing</button>
+        <button data-view="items"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span> Items</button>
+      </div>
+      <div class="nav-sec" id="nav-reports" role="group" aria-labelledby="nav-reports-h">
+        <h2 class="nav-h" id="nav-reports-h">Reports &amp; data</h2>
+        <button data-view="dashboard"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg></span> Dashboard</button>
+        <button data-view="targets"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg></span> Targets</button>
+        <button data-view="data"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg></span> Data</button>
+        <button data-view="guide"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.2c-.8.5-1.2 1-1.2 1.9M12 17h.01" stroke-linecap="round" stroke-linejoin="round"/></svg></span> How it works</button>
+      </div>
+    </nav>
+    <div class="foot">
+      <div class="user"><div class="avatar">M</div><div><div class="u-name">Mohab</div><div class="u-role">Key Account Manager</div></div></div>
+      <div class="row"><button class="tbtn" id="themeBtn">Theme</button></div>
+      <div class="mini" id="sideMeta"></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-in"><span class="logo"><span class="dot" id="dotTop" style="width:22px;height:22px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span> <span id="brandTop">Julphar Platform</span></span><div class="avatar" style="width:28px;height:28px;font-size:13px;margin-left:auto" title="Mohab — Key Account Manager">M</div><button class="tbtn" id="themeBtn2">Theme</button></div>
+      <div class="topnav" id="topNav" role="navigation" aria-label="Sections and pages">
+        <div class="topsecs" role="group" aria-label="Sections">
+          <button type="button" data-section="today" aria-current="true">Today</button>
+          <button type="button" data-section="sell">Sell</button>
+          <button type="button" data-section="stock">Stock</button>
+          <button type="button" data-section="customers">Customers &amp; prices</button>
+          <button type="button" data-section="reports">Reports &amp; data</button>
+        </div>
+        <div class="toppages">
+          <div class="toppg" data-sec="today" role="group" aria-label="Today pages">
+            <button data-view="today" aria-current="true">Today</button>
+          </div>
+          <div class="toppg" data-sec="sell" role="group" aria-label="Sell pages" hidden>
+            <button data-view="order">New order</button>
+            <button data-view="orders">Orders</button>
+            <button data-view="forecast">Reorder plan</button>
+          </div>
+          <div class="toppg" data-sec="stock" role="group" aria-label="Stock pages" hidden>
+            <button data-view="stock">Stock</button>
+            <button data-view="import">Import Excel</button>
+          </div>
+          <div class="toppg" data-sec="customers" role="group" aria-label="Customers &amp; prices pages" hidden>
+            <button data-view="accounts">Accounts</button>
+            <button data-view="pricing">Pricing</button>
+            <button data-view="items">Items</button>
+          </div>
+          <div class="toppg" data-sec="reports" role="group" aria-label="Reports &amp; data pages" hidden>
+            <button data-view="dashboard">Dashboard</button>
+            <button data-view="targets">Targets</button>
+            <button data-view="data">Data</button>
+            <button data-view="guide">How it works</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <main class="wrap" id="mainContent"><h1 class="sr-only" id="brandH1">Julphar Sales Platform</h1>
+      <div id="modeBanner" class="banners" hidden></div>
+      <div id="loader" role="status" aria-live="polite"><div class="ldr" aria-hidden="true"></div><div>Loading your data…</div></div>
+      <!-- DASHBOARD -->
+      <section class="view" id="view-dashboard">
+        <div class="h-row"><div><div class="eyebrow">Sales Management Cockpit</div><h2>Welcome back, Mohab</h2><div class="sub-greet">Here's your <span id="ytdYear"></span> year-to-date performance.</div></div><div class="h-act"><div class="field" style="margin:0"><label class="sr-only" for="periodSel">Period shown</label><select id="periodSel" aria-label="Period shown on the dashboard"></select></div><div class="synced" id="syncChip" title="Where the data is saved and when it last changed"></div></div></div>
+        <div class="kpis" id="kpis"></div>
+        <div class="note" id="scopeNote" role="status" aria-live="polite" style="margin:-8px 0 14px"></div>
+        <div class="card" id="recon" style="margin-bottom:14px"></div>
+        <div class="grid g-2" style="margin-bottom:14px">
+          <div class="card"><h3>Sales by Account <span class="tag">executed net · SAR</span></h3><div class="chart-box tall"><canvas id="chAcct"></canvas></div></div>
+          <div class="card"><h3>Account Contribution</h3><div class="chart-box tall"><canvas id="chDonut"></canvas></div></div>
+        </div>
+        <div class="grid g-2" style="margin-bottom:14px">
+          <div class="card"><h3>Monthly Sales Trend <span class="tag">executed net · SAR</span></h3><div class="chart-box"><canvas id="chMonth"></canvas></div></div>
+          <div class="card"><h3>Top 12 Items by Net</h3><div class="chart-box"><canvas id="chItems"></canvas></div></div>
+        </div>
+        <div class="card"><h3>Sales Concentration</h3><div id="concentration" class="muted"></div></div>
+      </section>
+
+      <!-- ACCOUNTS -->
+      <section class="view" id="view-accounts">
+        <div class="h-row"><div><div class="eyebrow">Accounts</div><h2>Account Performance</h2></div><div class="h-act"><span class="tag" id="acctCount"></span><button type="button" class="btn sm" id="acctAdd">+ Add account</button></div></div>
+        <div class="split">
+          <div><div class="searchbar"><label class="sr-only" for="acctSearch">Search accounts</label><input id="acctSearch" placeholder="Search accounts…" autocomplete="off"></div><label class="chk" id="acctClosedWrap" hidden><input type="checkbox" id="acctShowClosed"> Show closed (<span id="acctClosedN">0</span>)</label><div class="list" id="acctList" role="listbox" aria-label="Accounts"></div></div>
+          <div id="acctDetail"></div>
+        </div>
+      </section>
+
+      <!-- ORDERS -->
+      <section class="view" id="view-orders">
+        <div class="h-row"><div><div class="eyebrow">Orders</div><h2>Orders by account</h2></div><div class="h-act"><span class="tag" id="ordCount"></span><button type="button" class="btn ghost sm" id="ovImport">Import orders from Excel</button><button type="button" class="btn sm" id="ovNew">+ New order</button></div></div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="ov-filters">
+            <div class="field" style="margin:0"><label for="ovSearch">Search</label><input id="ovSearch" placeholder="Account, item, line ID, note…" autocomplete="off"></div>
+            <div class="field" style="margin:0"><label for="ovAcct">Account</label><select id="ovAcct"></select></div>
+            <div class="field" style="margin:0"><label for="ovMonth">Month</label><select id="ovMonth"></select></div>
+            <div class="field" style="margin:0"><label for="ovStatus">Status</label><select id="ovStatus"></select></div>
+          </div>
+          <div class="ov-sum"><span id="ovSum" role="status" aria-live="polite"></span><label class="chk" id="ovClosedWrap" hidden style="margin:0"><input type="checkbox" id="ovClosed" checked> Show closed accounts’ orders</label><button type="button" class="btn ghost sm" id="ovClear">Clear filters</button></div>
+        </div>
+        <div class="card" id="ordBody"></div>
+        <div class="note" id="ovNote" role="status" aria-live="polite"></div>
+      </section>
+
+      <!-- ITEMS -->
+      <section class="view" id="view-items">
+        <div class="h-row"><div><div class="eyebrow">Items</div><h2>Item Performance</h2></div><div class="h-act"><span class="tag" id="itemCount"></span><button type="button" class="btn ghost sm" id="itemImport">Import from Excel</button><button type="button" class="btn sm" id="itemAdd">+ Add item</button></div></div>
+        <div class="split">
+          <div><div class="searchbar"><label class="sr-only" for="itemSearch">Search items</label><input id="itemSearch" placeholder="Search items…" autocomplete="off"></div><div class="list" id="itemList" role="listbox" aria-label="Items"></div></div>
+          <div id="itemDetail"></div>
+        </div>
+      </section>
+
+      <!-- PRICING -->
+      <section class="view" id="view-pricing">
+        <div class="h-row"><div><div class="eyebrow">Pricing &amp; Deals</div><h2>Account-specific discounts</h2></div><div class="h-act"><div class="tag" id="pricingCount"></div><button type="button" class="btn ghost sm" id="prImport">Import deals from Excel</button></div></div>
+        <div class="card" id="pcCard" style="margin-bottom:14px"><h3>Price check <span class="tag">what a customer pays today · changes nothing</span></h3>
+          <div class="grid g-2b">
+            <div class="field" style="margin:0"><label for="pcAccount">Customer</label><select id="pcAccount"></select></div>
+            <div class="field" style="margin:0"><label for="pcItem">Item</label><input id="pcItem" list="itemDL" placeholder="Type item name…" autocomplete="off"></div>
+          </div>
+          <div class="note" id="pcOut" role="status" aria-live="polite"></div>
+        </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="grid g-2b">
+            <div class="field" style="margin:0"><label for="prAccount">Account</label><select id="prAccount"></select></div>
+            <div class="field" style="margin:0"><label for="prSearch">Filter items</label><input id="prSearch" placeholder="Search item…" autocomplete="off" aria-label="Filter items in pricing table"></div>
+          </div>
+          <label style="display:inline-flex;gap:6px;align-items:center;margin-top:10px"><input type="checkbox" id="prShowInactive"> Show inactive deals<span id="prInCount" class="muted"></span></label>
+        </div>
+        <div id="pricingBody" style="margin-bottom:14px"></div>
+        <div class="card" style="margin-bottom:14px"><h3>Set or retire a deal <span class="tag">saves directly · old rate kept as history</span></h3><div class="grid g-2b"><div class="field" style="margin:0"><label for="dcItem">Item (exact)</label><select id="dcItem"></select></div><div class="field" style="margin:0"><label for="dcRate">New discount % (0–100)</label><input id="dcRate" inputmode="decimal" placeholder="e.g. 40" autocomplete="off"></div></div><div class="note" id="dcCurrent"></div><div class="note" id="dcPreview" aria-live="polite"></div><div class="grid g-2b"><div class="field" style="margin:0"><label for="dcEff">Effective from (optional, default today)</label><input id="dcEff" type="date" autocomplete="off"></div></div><div class="field"><label for="dcReason">Reason (optional, kept in the history)</label><input id="dcReason" maxlength="200" autocomplete="off"></div><label style="display:inline-flex;gap:6px;align-items:center;margin-bottom:8px"><input type="checkbox" id="dcDeactivate"> Retire this deal (falls back to the standard rule)</label><div class="rowbtns"><button class="btn sm" id="dcBuild">Save deal</button></div><div class="note" id="dcNote" role="status" aria-live="polite"></div></div>
+      </section>
+
+      <!-- ORDER BUILDER -->
+      <section class="view" id="view-order">
+        <div class="h-row"><div><div class="eyebrow">New order</div><h2>Build, price &amp; save an order</h2></div><div class="tag">prices each line with the account’s deals</div></div>
+        <div class="card saved" id="savedPanel" hidden></div>
+        <div class="ob-grid">
+          <div class="card">
+            <div class="field"><label for="obAccount">Account</label><select id="obAccount"></select></div>
+            <div class="field"><label for="obStatus">Order status</label><select id="obStatus"><option value="Executed" selected>Executed</option><option value="Pending">Pending</option><option value="Quoted">Quoted</option></select></div><div class="field"><label for="obDate">Order date</label><input type="date" id="obDate"></div><div class="field"><label for="obNotes">Notes / reference (optional)</label><input id="obNotes" maxlength="160" autocomplete="off" placeholder="e.g. PO number"></div>
+            <div class="tabs" role="tablist" aria-label="Order entry method">
+              <button data-pane="manual" role="tab" aria-selected="true" aria-controls="pane-manual" id="tab-manual" aria-current="true">Add lines</button>
+              <button data-pane="paste" role="tab" aria-selected="false" aria-controls="pane-paste" id="tab-paste">Paste list</button>
+              <button data-pane="photo" role="tab" aria-selected="false" aria-controls="pane-photo" id="tab-photo">Photo</button>
+            </div>
+            <div class="pane active" id="pane-manual" role="tabpanel" aria-labelledby="tab-manual"><div class="note">Use “+ Add line” below, or switch to <strong>Paste list</strong> to drop many items at once.</div></div>
+            <div class="pane" id="pane-paste" role="tabpanel" aria-labelledby="tab-paste">
+              <div class="field"><label for="pasteBox">Paste or type your list — any style, one item per line</label>
+                <textarea id="pasteBox" placeholder="Adwaa Nimar&#10;500 adol cap 2*12 with 500 boxes&#10;mebo ointment 30gm x 100&#10;risek 20mg caps, 50"></textarea></div>
+              <div class="note">Write it the way you would say it: brand, form (cap, tab, syr…), strength, pack and the quantity. A line with only an account name selects that account. You review every line before it is added.</div>
+              <button class="btn sm" id="buildFromPaste">Read the list</button>
+              <div class="note" id="pasteResult" role="status" aria-live="polite"></div>
+              <div id="plReview"></div>
+            </div>
+            <div class="pane" id="pane-photo" role="tabpanel" aria-labelledby="tab-photo">
+              <div class="dropzone"><label for="photoInput">📷 Upload an order photo</label><input type="file" id="photoInput" accept="image/*" style="margin-top:10px" aria-label="Upload an order photo"><div id="photoPreview"></div></div>
+              <div class="note"><strong>Reading a photo:</strong> this page can preview the image, but reading items from it is done by <strong>Claude in chat</strong> — send the photo there and I’ll load the items+quantities here (or paste them into “Paste list”). This keeps uncertain reads out of your numbers.</div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Order summary <span class="tag" id="obAcctTag"></span></h3>
+            <div class="totrow"><span>Total quantity</span><span class="tv" id="tQty">0</span></div>
+            <div class="totrow"><span>Total gross (SAR)</span><span class="tv" id="tGross">0.00</span></div>
+            <div class="totrow"><span>Total discount (SAR)</span><span class="tv" id="tDisc">0.00</span></div>
+            <div class="totrow grand"><span>Net order value</span><span class="tv" id="tNet">0.00</span></div>
+            <div class="status-line" id="obValid" role="status" aria-live="polite"></div>
+            <div class="rowbtns"><button class="btn" id="btnReq">Save order</button><button class="btn ghost sm" id="btnCopy">⧉ Copy</button><button class="btn ghost sm" id="btnPrint">🖨 Print / PDF</button><button class="btn ghost sm" id="btnClear">Clear</button></div>
+            <div class="note" id="reqNote" role="status" aria-live="polite"></div><div class="note" id="copyNote" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <h3>Line items <button class="btn ghost sm" id="addLine">+ Add line</button></h3>
+          <div class="lines-head" aria-hidden="true"><span>Item</span><span>Qty</span><span>Ref price</span><span>Disc %</span><span>Net value</span><span></span></div>
+          <div id="lines"></div>
+          <div class="note" id="lineHint"></div>
+        </div>
+      </section>
+
+      <!-- FORECAST -->
+      <section class="view" id="view-forecast">
+        <div class="h-row"><div><div class="eyebrow">Reorder plan</div><h2>Build an expected order</h2></div><div class="tag">planning &amp; quotation tool — not an executed order</div></div>
+        <div class="tabs" role="tablist" aria-label="Forecast mode" id="fcModeTabs">
+          <button data-pane="single" role="tab" aria-selected="true" aria-controls="fc-pane-single" id="fc-tab-single" aria-current="true">Single account</button>
+          <button data-pane="multi" role="tab" aria-selected="false" aria-controls="fc-pane-multi" id="fc-tab-multi">Multi-account</button>
+        </div>
+
+        <div class="pane active" id="fc-pane-single" role="tabpanel" aria-labelledby="fc-tab-single">
+        <div class="fc-grid">
+          <div class="card">
+            <div class="field"><label for="fcAccount">Account</label><select id="fcAccount"></select></div>
+            <div class="field">
+              <label for="fcItemInput">Add item</label>
+              <div class="fc-add-row">
+                <input id="fcItemInput" list="itemDL" placeholder="Type item name…" autocomplete="off" aria-label="Item to add">
+                <input id="fcQtyInput" type="number" min="1" step="1" value="1" inputmode="numeric" aria-label="Quantity to add">
+                <button class="btn sm" id="fcAddBtn" type="button">+ Add</button>
+              </div>
+            </div>
+            <div class="rowbtns">
+              <label class="vh" for="fcBasis">Suggestion basis</label><select id="fcBasis" aria-label="Suggestion basis"><option value="auto" selected>Auto (best available)</option><option value="per_order">Per dated order</option><option value="monthly">Monthly average</option><option value="ytd_total">Total YTD volume</option></select><button class="btn ghost sm" id="fcSuggestBtn" type="button">Suggest from history</button>
+              <button class="btn ghost sm" id="fcClearBtn" type="button">Clear all</button>
+            </div>
+            <div class="note" id="fcSuggestNote" role="status" aria-live="polite"></div>
+          </div>
+          <div class="card">
+            <h3>Forecast summary <span class="tag" id="fcAcctTag"></span></h3>
+            <div class="totrow"><span>Total quantity</span><span class="tv" id="fcTQty">0</span></div>
+            <div class="totrow"><span>Total gross (SAR)</span><span class="tv" id="fcTGross">0.00</span></div>
+            <div class="totrow"><span>Total discount (SAR)</span><span class="tv" id="fcTDisc">0.00</span></div>
+            <div class="totrow grand"><span>Total net (SAR)</span><span class="tv" id="fcTNet">0.00</span></div>
+            <div class="totrow"><span>Average discount</span><span class="tv" id="fcAvgDisc">—</span></div>
+            <div class="status-line" id="fcValid" role="status" aria-live="polite"></div>
+            <div class="rowbtns"><button class="btn sm" id="fcExportCsv" type="button">⤓ Export CSV</button><button class="btn ghost sm" id="fcPrint" type="button">🖨 Print / PDF</button></div>
+            <div class="note">The CSV opens directly in Excel, with Arabic and special characters intact.</div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <h3>Forecast line items <span class="tag" id="fcLineCount"></span></h3>
+          <div class="fc-lines-head" aria-hidden="true"><span>Item</span><span>Qty</span><span>RSP</span><span>Disc %</span><span>Source</span><span>Net unit</span><span>Net value</span><span></span></div>
+          <div id="fcLines"></div>
+          <div class="note" id="fcLineHint">No items yet — add one above, or use “Suggest from history”.</div>
+        </div>
+        </div>
+
+        <div class="pane" id="fc-pane-multi" role="tabpanel" aria-labelledby="fc-tab-multi">
+          <div class="fc-grid">
+            <div class="card">
+              <div class="field"><label id="fmAcctLabel">Accounts <span class="tag" id="fmAcctCount"></span></label>
+                <div class="fm-acct-list" id="fmAcctList" role="group" aria-labelledby="fmAcctLabel"></div>
+              </div>
+              <div class="field">
+                <label for="fmItemInput">Add item</label>
+                <div class="fc-add-row">
+                  <input id="fmItemInput" list="itemDL" placeholder="Type item name…" autocomplete="off" aria-label="Item to add to matrix">
+                  <input id="fmQtyInput" type="number" min="0" step="1" value="0" inputmode="numeric" aria-label="Initial quantity to apply to all selected accounts">
+                  <button class="btn sm" id="fmAddBtn" type="button">+ Add</button>
+                </div>
+              </div>
+              <div class="rowbtns">
+                <label class="vh" for="fmBasis">Suggestion basis</label><select id="fmBasis" aria-label="Suggestion basis"><option value="auto" selected>Auto (best available)</option><option value="per_order">Per dated order</option><option value="monthly">Monthly average</option><option value="ytd_total">Total YTD volume</option></select><button class="btn ghost sm" id="fmSuggestBtn" type="button">Suggest from history</button>
+                <button class="btn ghost sm" id="fmClearBtn" type="button">Clear all</button>
+              </div>
+              <div class="note" id="fmSuggestNote" role="status" aria-live="polite"></div>
+            </div>
+            <div class="card">
+              <h3>Matrix summary <span class="tag" id="fmAcctTag"></span></h3>
+              <div class="totrow"><span>Total quantity</span><span class="tv" id="fmTQty">0</span></div>
+              <div class="totrow"><span>Total gross (SAR)</span><span class="tv" id="fmTGross">0.00</span></div>
+              <div class="totrow"><span>Total discount (SAR)</span><span class="tv" id="fmTDisc">0.00</span></div>
+              <div class="totrow grand"><span>Grand total net (SAR)</span><span class="tv" id="fmTNet">0.00</span></div>
+              <div class="totrow"><span>Average discount</span><span class="tv" id="fmAvgDisc">—</span></div>
+              <div class="status-line" id="fmValid" role="status" aria-live="polite"></div>
+              <div class="rowbtns"><button class="btn sm" id="fmExportCsv" type="button">⤓ Export CSV (matrix)</button><button class="btn ghost sm" id="fmPrint" type="button">🖨 Print / PDF</button></div>
+              <div class="note">One row per account × item, with a subtotal per account and a grand total — opens directly in Excel.</div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:14px">
+            <h3>Forecast matrix <span class="tag" id="fmMatrixTag"></span></h3>
+            <div class="fm-scroll" id="fmMatrixWrap"><div class="note" id="fmMatrixHint">Select at least one account and add at least one item above to build the matrix.</div></div>
+          </div>
+        </div>
+      </section>
+      <!-- TODAY -->
+      <section class="view active" id="view-today">
+        <div class="h-row"><div><div class="eyebrow" id="tdEyebrow">Today</div><h2 id="tdHello">Today</h2><div class="sub-greet" id="tdDate"></div></div></div>
+        <div id="todayBody"></div>
+      </section>
+
+      <!-- STOCK -->
+      <section class="view" id="view-stock">
+        <div class="h-row"><div><div class="eyebrow">Stock</div><h2>What is on the shelf</h2></div><div class="tag">counted from the day you set opening quantities</div></div>
+        <div id="stockBody"></div>
+      </section>
+
+      <!-- TARGETS -->
+      <section class="view" id="view-targets">
+        <div class="h-row"><div><div class="eyebrow">Targets</div><h2>Monthly target</h2></div><div class="tag" id="tgCount"></div></div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="grid g-2b">
+            <div class="field" style="margin:0"><label for="tgMonth">Month</label><select id="tgMonth"></select></div>
+            <div class="field" style="margin:0"><label for="tgTotal">Total target (SAR, net)</label><input id="tgTotal" inputmode="decimal" placeholder="e.g. 300000" autocomplete="off"></div>
+          </div>
+          <div class="field" style="margin-top:12px"><label for="tgW">Split by history or by potential: <strong id="tgWTxt">70% history · 30% potential</strong></label><input id="tgW" type="range" min="0" max="100" step="5" value="70"><div class="note">History = what each account bought in the look-back period. Potential = the orders expected for that month and the open orders already saved.</div></div>
+          <div class="field" style="max-width:260px"><label for="tgHM">Look back</label><select id="tgHM"><option value="3">3 months</option><option value="6" selected>6 months</option><option value="12">12 months</option></select></div>
+          <div class="rowbtns"><button type="button" class="btn" id="tgBreak">Break down</button><button type="button" class="btn ghost" id="tgReset">Clear adjustments</button></div>
+          <div class="note" id="tgMsg" role="status" aria-live="polite"></div>
+        </div>
+        <div id="tgPreview"></div>
+        <div id="tgProgress"></div>
+        <div id="tgSaved"></div>
+      </section>
+
+<!-- IMPORT (V43): one card per step, revealed as the owner goes; nothing is saved until the Import button is pressed -->
+      <section class="view" id="view-import">
+        <div class="h-row"><div><div class="eyebrow">Import</div><h2>Import from Excel</h2></div><div class="tag">checked first · nothing is saved until you press Import</div></div>
+
+        <div class="card imp-step" id="impS1">
+          <h3><span class="imp-num">1</span> What are you importing?</h3>
+          <div class="imp-types" id="impTypes" role="group" aria-label="What are you importing?">
+            <button type="button" data-imptype="stock" aria-pressed="false"><strong>Stock counts</strong><span>What is on a shelf</span></button>
+            <button type="button" data-imptype="orders" aria-pressed="false"><strong>Orders</strong><span>Order lines to add</span></button>
+            <button type="button" data-imptype="items" aria-pressed="false"><strong>Items &amp; prices</strong><span>New items, RSP, prices</span></button>
+            <button type="button" data-imptype="deals" aria-pressed="false"><strong>Deals</strong><span>Account discounts</span></button>
+          </div>
+          <div class="field imp-scope" id="impScopeWrap" hidden><label for="impScope">Whose stock?</label><select id="impScope"></select></div>
+          <p class="note imp-tpl" id="impTpl">Not sure how the sheet should look? Download a ready template:
+            <button type="button" class="imp-link" data-imptpl="stock">Stock</button> ·
+            <button type="button" class="imp-link" data-imptpl="orders">Orders</button> ·
+            <button type="button" class="imp-link" data-imptpl="items">Items &amp; prices</button> ·
+            <button type="button" class="imp-link" data-imptpl="deals">Deals</button></p>
+          <div class="note" id="impTplNote" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="card imp-step" id="impS2" hidden>
+          <h3><span class="imp-num">2</span> Choose the file</h3>
+          <div class="field"><label for="impFile">Excel (.xlsx) or CSV file</label><input type="file" id="impFile" accept=".xlsx,.csv"></div>
+          <div class="imp-msg" id="impFileMsg" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="card imp-step" id="impS3" hidden>
+          <h3><span class="imp-num">3</span> Check the columns</h3>
+          <div class="grid g-2b imp-pick-row">
+            <div class="field" id="impSheetWrap" hidden><label for="impSheet">Which sheet?</label><select id="impSheet"></select></div>
+            <div class="field"><label for="impHdrRow">The column headings are in</label><select id="impHdrRow"></select></div>
+            <div class="field" id="impDefWrap" hidden><label for="impDefStatus">A row with no status is</label><select id="impDefStatus"><option value="Executed">Executed (sold)</option><option value="Pending">Pending</option><option value="Quoted">Quoted</option></select></div>
+          </div>
+          <div class="imp-map" id="impMap"></div>
+          <div class="imp-msg" id="impMapMsg" role="status" aria-live="polite"></div>
+          <div class="rowbtns"><button type="button" class="btn" id="impNext" disabled>Next: check the rows</button></div>
+        </div>
+
+        <div class="card imp-step" id="impS4" hidden>
+          <h3><span class="imp-num">4</span> Check the rows</h3>
+          <div class="st-chips" id="impChips" role="group" aria-label="Show rows"></div>
+          <div class="note" id="impSkipNote" role="status" aria-live="polite"></div>
+          <div class="imp-totals" id="impTotals" role="status" aria-live="polite"></div>
+          <div class="imp-scroll" id="impScroll"><table class="imp-table" id="impTable"><thead><tr><th>Row</th><th>What it is</th><th>What will happen</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+          <div class="rowbtns"><button type="button" class="btn ghost" id="impMore" hidden>Show more rows</button></div>
+          <div class="imp-go"><h3><span class="imp-num">5</span> Import</h3>
+            <p class="note" style="margin:0 0 8px">Only ticked rows are saved. Nothing is deleted, and every change is written to the history.</p>
+            <button type="button" class="btn" id="impGo" disabled>Import</button>
+            <div class="imp-msg" id="impMsg" role="status" aria-live="polite"></div></div>
+        </div>
+
+        <div class="card imp-step" id="impResult" hidden></div>
+      </section>
+
+
+      <!-- HOW IT WORKS (V43): placeholder until the guide is written -->
+      <section class="view" id="view-guide">
+        <div class="h-row"><div><div class="eyebrow">Reports &amp; data</div><h2>How it works</h2></div></div>
+        <div id="guideBody"></div>
+      </section>
+<!-- DATA -->
+      <section class="view" id="view-data">
+        <div class="h-row"><div><div class="eyebrow">Data</div><h2>Records, export &amp; backup</h2></div></div>
+        <div id="dataBody"></div>
+      </section>
+    </main>
+    <div class="wrap" style="padding-block:6px 20px;color:var(--ink-faint);font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <span id="footSrc"></span><span id="footMeta"></span>
+    </div>
+  </div>
+</div>
+
+<datalist id="itemDL"></datalist>
+<div id="printArea"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="dlgHost" hidden></div>
+
+<script>@@INCLUDE:store.js@@</script>
+<script>@@INCLUDE:app.js@@</script>
+</body></html>

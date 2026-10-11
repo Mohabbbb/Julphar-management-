@@ -1,0 +1,11 @@
+
+
+
+
+
+
+
+
+
+
+.recon-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:8px 0}.recon-grid .m-label{font-size:11px;color:var(--ink-faint)}.recon-grid .m-val{font-weight:600;font-variant-numeric:tabular-nums}
