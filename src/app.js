@@ -1736,6 +1736,8 @@ try{var v42p=localStorage.getItem('jsp-period');if(v42p&&/^\d{4}$/.test(v42p))V4
 
 /* ---------- small helpers ---------- */
 function v42Ok(){return typeof Eng!=='undefined'&&Eng&&typeof Eng.ctx==='function';}
+/* V44 (ADR-0010): stock entry is ON only when master/settings.stockEntry === true. The page never writes this flag. */
+function v44On(){var s=Store.peek('master/settings');return !!(s&&s.stockEntry===true);}
 function v42InPeriod(d){return V42.all||V42.period==='all'||String(d||'').slice(0,4)===V42.period;}
 function v42Ctx(){if(!V42.ctx){V42.ctx=Eng.ctx(Store.all(),localDate());V42.cache={};}return V42.ctx;}
 function v42Memo(k,fn){var c=v42Ctx();if(!Object.prototype.hasOwnProperty.call(V42.cache,k))V42.cache[k]=fn(c);return V42.cache[k];}
@@ -1753,7 +1755,8 @@ function v42TodayList(){
   var eng=v42Alerts(),ra={},order=[],out=[],placed=false;
   v42LivePreds().forEach(function(p){if((p.status!=='overdue'&&p.status!=='due')||p.inPipeline)return;if(!ra[p.account]){ra[p.account]={over:0,items:[]};order.push(p.account);}if(p.status==='overdue')ra[p.account].over++;ra[p.account].items.push(p.item+' x '+INT(p.qty));});
   var mine=order.map(function(a){var g=ra[a],n=g.items.length;return {sev:g.over?'warn':'info',kind:'reorder',title:a+': '+n+' reorder'+(n===1?'':'s')+(g.over?' due (overdue)':' due'),detail:g.items.slice(0,4).join(', ')+(n>4?' and '+(n-4)+' more':''),action:{type:'draft-order',arg:a}};});
-  eng.forEach(function(a){if(a.kind==='reorder'){if(!placed){placed=true;out=out.concat(mine);}return;}out.push(a);});
+  var on=v44On();
+  eng.forEach(function(a){if(a.kind==='reorder'){if(!placed){placed=true;out=out.concat(mine);}return;}if(!on&&(a.kind==='stock'||a.kind==='count'))return;out.push(a);});
   if(!placed)out=out.concat(mine);
   var rank={bad:0,warn:1,info:2};return out.map(function(a,i){return [a,i];}).sort(function(x,y){return ((rank[x[0].sev]||2)-(rank[y[0].sev]||2))||(x[1]-y[1]);}).map(function(x){return x[0];});
 }
@@ -1849,7 +1852,9 @@ function v42Common(){
 
 /* ==================== Order builder: stock hints + saved card ==================== */
 function v42Hints(){
-  if(!v42Ok()||!lines)return;var m=null;try{m=v42OwnMap();}catch(e){m=null;}
+  if(!v42Ok()||!lines)return;
+  if(!v44On()){Array.prototype.forEach.call(lines.querySelectorAll('.stk-hint'),function(h){h.textContent='';h.className='stk-hint';});return;}
+  var m=null;try{m=v42OwnMap();}catch(e){m=null;}
   Array.prototype.forEach.call(lines.querySelectorAll('.line'),function(row){
     var hint=row.querySelector('.stk-hint');if(!hint)return;
     var item=row.querySelector('.li-item').value.trim(),qty=parseFloat(row.querySelector('.li-qty').value),im=itemMap[item],r=(m&&im)?m[im.id]:null;
@@ -1862,7 +1867,7 @@ function v42Hints(){
   });
 }
 function v42SavedStock(o){
-  try{if(!v42Ok())return '';var c=Eng.ctx(Store.all(),localDate()),os=Eng.ownStock(c),by={};os.rows.forEach(function(r){by[r.itemId]=r;});
+  try{if(!v42Ok()||!v44On())return '';var c=Eng.ctx(Store.all(),localDate()),os=Eng.ownStock(c),by={};os.rows.forEach(function(r){by[r.itemId]=r;});
     var rows=[];o.lines.forEach(function(l){var im=itemMap[l.item],r=im?by[im.id]:null;if(r&&r.tracked)rows.push([l.item,r]);});
     if(!rows.length)return '';
     return '<div class="stk-after" id="spStock"><strong>Stock after this order</strong><div class="scroll"><table class="sv-tbl"><thead><tr><th>Item</th><th class="num">On hand</th><th class="num">Available</th></tr></thead><tbody>'+
@@ -1894,7 +1899,7 @@ function renderToday(){
            :v42Tile('tdMonth','This month · '+MON[+cm.slice(5,7)-1]+' '+cm.slice(0,4),K(v42MonthNetAll(cm))+' SAR','No target set · <a href="#" data-tdgo="targets">set one</a>'),
       v42Tile('tdPipe','Open orders (pipeline)',K(pipe.net||0)+' SAR',INT(pipe.groups.length)+' order'+(pipe.groups.length===1?'':'s')+' · '+INT(pipe.qty)+' unit'+(pipe.qty===1?'':'s')+' · pending or quoted'),
       v42Tile('tdDue','Reorders due',INT(Object.keys(dAcc).length)+' account'+(Object.keys(dAcc).length===1?'':'s'),INT(due.length)+' item'+(due.length===1?'':'s')+' · about '+K(dVal)+' SAR'),
-      sm.tracked?v42Tile('tdStk','Stock alerts',INT(attn)+' item'+(attn===1?'':'s'),INT(sm.out||0)+' out · '+INT(sm.short||0)+' short · '+INT(sm.low||0)+' low'+(sm.negative?' · '+sm.negative+' to recount':''),attn?'k-warn':'')
+      !v44On()?'':sm.tracked?v42Tile('tdStk','Stock alerts',INT(attn)+' item'+(attn===1?'':'s'),INT(sm.out||0)+' out · '+INT(sm.short||0)+' short · '+INT(sm.low||0)+' low'+(sm.negative?' · '+sm.negative+' to recount':''),attn?'k-warn':'')
                :v42Tile('tdStk','Stock alerts','Not set up','<a href="#" data-tdgo="setup">Start tracking stock</a>')
     ];
     var h='<div class="kpis">'+tiles.join('')+'</div>';
@@ -2108,7 +2113,7 @@ function v42AcctList(){
   rows.sort(function(a,b){return (b.tracked-a.tracked)||String(a.item).localeCompare(String(b.item));});
   el.innerHTML='<div class="scroll"><table class="st-table"><thead><tr><th>Item</th><th>Last count</th><th class="num">Delivered since</th><th class="num">Est. on hand</th><th>Run-out date</th><th>Next order</th></tr></thead><tbody>'+
     rows.map(function(r){var p=next[r.itemId],no=p?(p.daysTo<0?'<span class="badge b-bad">'+(-p.daysTo)+'d late</span>':v42D(p.nextDate)):'<span class="muted">—</span>';
-      if(!r.tracked)return '<tr><td>'+esc(v42ItemShort(r.item))+'</td><td colspan="4" class="muted">Not counted yet'+(r.dailyUse?' · uses about '+v42Num(r.dailyUse,1)+' a day':'')+'</td><td>'+no+'</td></tr>';
+      if(!r.tracked)return '<tr><td>'+esc(v42ItemShort(r.item))+'</td><td colspan="4" class="muted">Not counted yet'+(r.dailyUse&&!r.estimated?' · uses about '+v42Num(r.dailyUse,1)+' a day':'')+'</td><td>'+no+'</td></tr>';
       return '<tr><td>'+esc(v42ItemShort(r.item))+'</td><td>'+esc(v42D(String(r.baseTs||'').slice(0,10)))+'</td><td class="num">'+INT(r.delivered)+'</td><td class="num"><strong>'+INT(Math.round(r.estOnHand))+'</strong>'+(r.dailyUse==null?' <span class="muted" title="No usage data">*</span>':'')+'</td><td>'+(r.runOutDate?esc(v42D(r.runOutDate)):'<span class="muted">—</span>')+'</td><td>'+no+'</td></tr>';}).join('')+'</tbody></table></div>'+
     '<div class="note">* no usage data yet, so the estimate is the count plus deliveries only.</div>';
 }
@@ -3200,6 +3205,7 @@ function v43Restore(k){if(!k)return;var el=$('stockBody'),t=null;if(!el)return;
 function v43RenderStock(){
   var el=$('stockBody');if(!el)return;
   if(!v42Ok()){el.innerHTML='<div class="card"><p class="muted">The planning engine did not load. Reload the page.</p></div>';return;}
+  v44StockTag();if(!v44On()){v44RenderStock();return;}
   var S=V42.st;if(S.tab==='setup'&&S.dirty&&el.querySelector('#suList'))return; /* keep what is being typed in the V42 grid */
   var keep=v43Focus();
   if(S.tab==='own'&&el.getAttribute('data-sk')==='own'&&$('skList')&&$('skFilter')){ /* same screen: refresh the parts, keep #skMsg, the counters and the bar as the same nodes */
@@ -3395,6 +3401,58 @@ show=function(v){
 };
 window.addEventListener('beforeunload',function(e){if(v43Dirty()||V43I.running){e.preventDefault();e.returnValue='';return '';}});
 
+/* ==================== V44 — stock from orders only (ADR-0010) ====================
+   With stock entry OFF (the default) the Stock section shows one plain line about own stock and the Customers' stock table,
+   worked out from each customer's last order and usual gap (Eng.acctStock + Eng.predictions). Nothing here writes. */
+var V44={acct:'',wired:false,tag:null};
+var V44_PST={lapsed:['b-bad','Lapsed'],overdue:['b-bad','Overdue'],due:['b-review','Due'],soon:['b-std','Soon'],later:['b-off','Later']};
+function v44StockTag(){var t=document.querySelector('#view-stock .h-row .tag');if(!t)return;if(V44.tag==null)V44.tag=t.textContent;
+  t.textContent=v44On()?V44.tag:'worked out from each customer’s orders';}
+function v44RenderStock(){
+  var el=$('stockBody');if(!el)return;
+  try{
+    var open=D.accounts.filter(function(a){return a.active;}).map(function(a){return a.name;}).sort(function(a,b){return a.localeCompare(b);});
+    if(!V44.acct||open.indexOf(V44.acct)<0)V44.acct=open[0]||'';
+    el.setAttribute('data-sk','');
+    el.innerHTML='<div class="card" style="margin-bottom:14px" id="v44Own"><p style="margin:0">Your own stock isn’t tracked — stock entry is switched off.</p></div>'+
+      '<div class="card" id="v44Cust"><h3>Customers’ stock</h3><div class="field" style="max-width:420px"><label for="v44Acct">Account</label><select id="v44Acct">'+
+      open.map(function(n){return '<option value="'+esc(n)+'"'+(n===V44.acct?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select></div>'+
+      '<p class="note">What the customer probably still has, worked out from their last order and their usual gap between orders. Nothing is typed in.</p><div id="v44List"></div></div>';
+    v44List();
+  }catch(e){el.innerHTML=v42Err('Stock',e);}
+  if(!V44.wired){V44.wired=true;el.addEventListener('change',function(e){var t=e.target;if(t&&t.id==='v44Acct'){V44.acct=t.value;v44List();}});}
+}
+function v44List(){
+  var el=$('v44List');if(!el)return;var name=V44.acct;
+  if(!name){el.innerHTML='<p class="muted" style="margin:0">No open accounts.</p>';return;}
+  var rows=Eng.acctStock(v42Ctx(),name).rows.slice(),next={};
+  v42Preds().rows.forEach(function(p){if(p.account===name)next[p.itemId]=p;});
+  if(!rows.length){el.innerHTML='<p class="muted" style="margin:0">'+esc(name)+' has no executed orders yet.</p>';return;}
+  rows.sort(function(a,b){var x=a.estimated?0:1,y=b.estimated?0:1;return (x-y)||(x===0&&a.runOutDate!==b.runOutDate?(a.runOutDate<b.runOutDate?-1:1):0)||String(a.item).localeCompare(String(b.item));});
+  function dash(){return '<span class="muted">—</span>';}
+  var n=0;
+  el.innerHTML='<div class="scroll"><table class="st-table" id="v44Table"><thead><tr><th>Item</th><th>Last order</th><th class="num">Last qty</th><th class="num">Usual gap (days)</th><th class="num">Est. left now</th><th>Runs out</th><th>Expected order</th></tr></thead><tbody>'+
+    rows.map(function(r){var p=next[r.itemId],est=r.estimated===true,ps=p?(V44_PST[p.status]||['b-off',p.status]):null;if(est)n++;
+      var exp=p?esc(v42D(p.nextDate))+' '+v42Chip(ps[0],ps[1])+(p.inPipeline?' '+v42Chip('b-good','In pipeline'):''):dash();
+      return '<tr data-item="'+esc(r.itemId)+'" data-est="'+(est?'1':'0')+'"><td>'+esc(v42ItemShort(r.item))+(est?'':'<div class="muted" style="font-size:12px">Not enough orders yet</div>')+'</td>'+
+        '<td>'+(r.lastDate?esc(v42D(r.lastDate)):dash())+'</td>'+
+        '<td class="num">'+(est?INT(r.lastQty):dash())+'</td>'+
+        '<td class="num">'+(est?INT(r.interval):dash())+'</td>'+
+        '<td class="num">'+(est?'<strong>'+INT(r.estOnHand)+'</strong>':dash())+'</td>'+
+        '<td>'+(est?esc(v42D(r.runOutDate)):dash())+'</td>'+
+        '<td>'+exp+'</td></tr>';}).join('')+'</tbody></table></div>'+
+    '<div class="note">'+INT(n)+' of '+INT(rows.length)+' item'+(rows.length===1?'':'s')+' have an estimate. Est. left now = last order quantity, used up evenly over the usual gap. “—” means not known yet (never 0).</div>';
+}
+/* the Import page offers "Stock counts" and the stock template only while stock entry is ON (taken out of the page, not just hidden) */
+var V44I=null;
+function v44SyncImport(){
+  var on=v44On(),tb=document.querySelector('#impTypes button[data-imptype="stock"]'),tl=$('impTplStock');
+  if(!V44I){if(!tb||!tl)return;V44I={tb:tb,tbNext:tb.nextSibling,tbPar:tb.parentNode,tl:tl,tlNext:tl.nextSibling,tlPar:tl.parentNode};}
+  if(on){if(!V44I.tb.parentNode)V44I.tbPar.insertBefore(V44I.tb,V44I.tbNext);if(!V44I.tl.parentNode)V44I.tlPar.insertBefore(V44I.tl,V44I.tlNext);}
+  else{if(V44I.tb.parentNode)V44I.tb.parentNode.removeChild(V44I.tb);if(V44I.tl.parentNode)V44I.tl.parentNode.removeChild(V44I.tl);
+    if(V43I.type==='stock'&&!V43I.running)v43ISetType(null);}
+}
+
 renderStock=v43RenderStock;RENDER.stock=v43RenderStock;v43Wire();
 
 /* ==================== V43 UI — Excel import wizard (stock, orders, items, deals) ====================
@@ -3543,6 +3601,7 @@ function v43IFillScope(){
   sel.value=cur;if(sel.value!==cur){V43I.scope='own';sel.value='own';}}
 function v43IInvalidate(){V43I.plan=null;V43I.picks={};V43I.ticks={};V43I.filter='all';V43I.limit=300;V43I.leftOut=[];v43IShow('impS4',false);v43IShow('impResult',false);v43IMsg('impMsg','','');$('impResult').innerHTML='';}
 function v43ISetType(t){
+  if(t==='stock'&&!v44On())t=null;
   V43I.type=t;
   var bs=$('impTypes').querySelectorAll('button[data-imptype]'),i;
   for(i=0;i<bs.length;i++)bs[i].setAttribute('aria-pressed',String(bs[i].getAttribute('data-imptype')===t));
@@ -3557,6 +3616,7 @@ function v43IReset(){
   v43IShow('impS3',false);v43IInvalidate();}
 function v43OpenImport(type){
   if(V43I.running){show('import');return;}
+  v44SyncImport();
   V43I.scope='own';V43I.defStatus='Executed';v43IReset();
   $('impDefStatus').value='Executed';v43IFillScope();
   v43ISetType(type&&V43I_NAMES[type]?type:null);
@@ -3909,7 +3969,7 @@ function v43IWriteDeals(rows,file){
 
 /* ---------- templates (xlsx through the platform's own zipStore / xSheet writer, saved through the downloads path) ---------- */
 function v43Template(type,noteId){
-  if(!V43I_NAMES[type])return;
+  if(!V43I_NAMES[type]||(type==='stock'&&!v44On()))return;
   derive(Store.all());
   var B=v42Brand(),name=B.file+'_'+V43I_NAMES[type]+'_template.xlsx',today=localDate(),sheet,rows=[],own;
   if(type==='stock'){
@@ -3961,7 +4021,7 @@ function v43IWire(){
       try{var pl=v43IBuildPlan();if(!pl.error){V43I.plan=pl;v43IRenderPreview();}}catch(e2){v43IMsg('impMsg','bad',esc((e2&&e2.message)||'Could not check the rows.'));}return;}
   });
 }
-RENDER['import']=function(){v43IFillScope();};
+RENDER['import']=function(){v44SyncImport();v43IFillScope();};
 v43IWire();
 /* the Import buttons on the Orders, Items and Pricing pages open the wizard with that type already chosen */
 [['ovImport','orders'],['itemImport','items'],['prImport','deals']].forEach(function(x){var b=$(x[0]);if(b)b.addEventListener('click',function(){v43OpenImport(x[1]);});});
@@ -3976,6 +4036,7 @@ var V43G_SECS=[
   ['Stock',[['stock','Stock','What you have and what is left. Type a count, press Save.'],['import','Import Excel','Bring in stock, orders, items or deals from a spreadsheet. You see what will happen first.']]],
   ['Customers & prices',[['accounts','Accounts','Your customers. Close one that stopped ordering (its history stays).'],['pricing','Pricing','The deal each customer has for each item.'],['items','Items','Your product list with the RSP and the standard discount.']]],
   ['Reports & data',[['dashboard','Dashboard','Sales so far: by customer, item and month.'],['targets','Targets','Set a monthly target and see how it splits between customers.'],['data','Data','Excel export, backup and restore, company name and colour, data checks.'],['guide','How it works','This page.']]]];
+var V44G_SECS=V43G_SECS.map(function(s){return s[0]!=='Stock'?s:['Stock',[['stock','Stock','What each customer probably has left, worked out from their orders. Nothing to type.'],['import','Import Excel','Bring in orders, items or deals from a spreadsheet. You see what will happen first.']]];});
 var V43G_TYPES=[['stock','Stock counts','A count of what is on a shelf: yours, or a customer’s.'],['orders','Orders','Order lines to add to the Orders page.'],['items','Items & prices','New items, or changes to the RSP, price, discount and details of the ones you have.'],['deals','Deals','A discount for one customer on one item.']];
 var V43G_NOTE={
   stock:'The Account column is only needed when the file lists customers’ stock (choose “Customers’ stock” in step 1). A row with no quantity is left out.',
@@ -4004,7 +4065,7 @@ function v43GWrap(s,max){
   if(lines.length>3){lines=lines.slice(0,3);lines[2]=lines[2].slice(0,max-1)+'\u2026';}
   return lines.length?lines:[''];}
 function v43GFig(co,tall){
-  var cl=v43GWrap(co,tall?26:15),B=[['You enter',['New order','Stock updates','Excel import']],['Platform database',cl.concat(['Every change saved','with its history'])],['You see',['Today','Stock','Targets','Dashboard']],['You take out',['Excel export','PDF','Backup']]],
+  var cl=v43GWrap(co,tall?26:15),B=[['You enter',v44On()?['New order','Stock updates','Excel import']:['New order','Excel import']],['Platform database',cl.concat(['Every change saved','with its history'])],['You see',['Today','Stock','Targets','Dashboard']],['You take out',['Excel export','PDF','Backup']]],
     i,j,x,y,h,w=190,s,ar='',vw=tall?300:880,vh,bx,gs=[],mx=0,alt;
   alt=B.map(function(b){return b[0]+': '+b[1].join(', ');}).join('. Then ');
   for(i=0;i<4;i++)mx=Math.max(mx,B[i][1].length);
@@ -4037,27 +4098,30 @@ function v43GImp(t){
     '<p class="note">'+esc(V43G_NOTE[t])+'</p>'+
     '<button type="button" class="btn ghost sm" data-gdtpl="'+t+'">Download template</button><div class="note gd-tplnote" id="guideTplNote_'+t+'" role="status" aria-live="polite"></div></div>';}
 function v43GBody(){
-  var B=v42Brand(),co=B.company,tall=V43G.mode==='tall',h='',i,j,s,n=0;
+  var B=v42Brand(),co=B.company,tall=V43G.mode==='tall',h='',i,j,s,n=0,on=v44On(),secs=on?V43G_SECS:V44G_SECS,types=V43G_TYPES.filter(function(y){return on||y[0]!=='stock';});
   function H(t){n++;return '<h3 class="gd-h"><span class="gd-n" aria-hidden="true">'+n+'</span> '+t+'</h3>';}
   function go(v,l){return '<button type="button" class="gd-go" data-gdgo="'+v+'">'+esc(l)+'</button>';}
   h+='<p class="gd-lead">This page explains how <strong>'+esc(B.title)+'</strong> works, in about five minutes. Nothing here changes your data.</p>';
   h+='<div class="card gd-card">'+H('The big picture')+'<figure class="gd-fig">'+v43GFig(co,tall)+'</figure><p class="note">You put information in, the platform keeps it safe with its history, and you see it as screens, Excel files, PDFs and backups.</p></div>';
   h+='<div class="card gd-card">'+H('Your daily routine')+'<ol class="gd-steps">'+
     '<li><strong>Open '+go('today','Today')+'</strong> to see what needs you now.</li>'+
-    '<li><strong>Act on the alerts.</strong> Every alert has a button: draft an order, receive stock, count, open the page.</li>'+
+    (on?'<li><strong>Act on the alerts.</strong> Every alert has a button: draft an order, receive stock, count, open the page.</li>':'<li><strong>Act on the alerts.</strong> Every alert has a button: draft an order, open the page, download a backup.</li>')+
     '<li><strong>Enter your orders</strong> in '+go('order','New order')+', or bring many at once with '+go('import','Import Excel')+'.</li>'+
-    '<li><strong>Update '+go('stock','Stock')+' when you count.</strong> Type what you counted and press Save.</li>'+
+    (on?'<li><strong>Update '+go('stock','Stock')+' when you count.</strong> Type what you counted and press Save.</li>':'<li><strong>Check '+go('stock','Stock')+'</strong> to see what each customer probably has left, worked out from their orders.</li>')+
     '<li><strong>Download a backup once a week</strong> from '+go('data','Data')+'. Today reminds you after 7 days.</li></ol></div>';
   h+='<div class="card gd-card">'+H('What each section does')+'<div class="gd-secs">';
-  for(i=0;i<V43G_SECS.length;i++){s=V43G_SECS[i];h+='<div class="gd-sec"><h4>'+esc(s[0])+'</h4><ul>';
+  for(i=0;i<secs.length;i++){s=secs[i];h+='<div class="gd-sec"><h4>'+esc(s[0])+'</h4><ul>';
     for(j=0;j<s[1].length;j++)h+='<li>'+go(s[1][j][0],s[1][j][1])+'<span>'+esc(s[1][j][2])+'</span></li>';
     h+='</ul></div>';}
   h+='</div></div>';
   h+='<div class="card gd-card">'+H('How the numbers are made')+
-    '<div class="gd-num"><h4>Stock</h4><p><strong>You have</strong> = your last count + stock you received (and corrections you typed) − the orders you saved as Executed after that count.</p>'+
+    (on?'<div class="gd-num"><h4>Stock</h4><p><strong>You have</strong> = your last count + stock you received (and corrections you typed) − the orders you saved as Executed after that count.</p>'+
     '<p><strong>Left</strong> = You have − <strong>On order (reserved)</strong>: the orders still waiting (Pending, and Quoted unless you switch that off in Set up &amp; settings).</p>'+
-    '<p class="note">An item you never counted shows “Not tracked”, never 0. Orders saved before you started counting are not taken off.</p></div>'+
-    '<div class="gd-num"><h4>Expected orders</h4><p>For every customer and item that has ordered before, I work out the <strong>usual gap</strong> between orders (kept between 1 week and 6 months) and the <strong>usual quantity</strong> (the middle one). The next order is the last order date plus that gap — sooner if the customer’s own stock count says it runs out.</p>'+
+    '<p class="note">An item you never counted shows “Not tracked”, never 0. Orders saved before you started counting are not taken off.</p></div>'
+    :'<div class="gd-num"><h4>Stock</h4><p>Stock is <strong>worked out from orders</strong>, never typed in. For each customer and item I take the <strong>last order</strong> and the <strong>usual gap</strong> between orders: the customer is taken to use that quantity evenly over the gap, so <strong>Est. left now</strong> goes down day by day and it <strong>runs out</strong> on last order + usual gap.</p>'+
+    '<p>Stock entry is <strong>switched off</strong>: there is nowhere to type your own stock or a customer\u2019s count, and your own stock isn\u2019t tracked.</p>'+
+    '<p class="note">An item without enough orders to know the usual gap shows “—” and “Not enough orders yet”, never 0.</p></div>')+
+    '<div class="gd-num"><h4>Expected orders</h4><p>For every customer and item that has ordered before, I work out the <strong>usual gap</strong> between orders (kept between 1 week and 6 months) and the <strong>usual quantity</strong> (the middle one). The next order is the last order date plus that gap'+(on?' — sooner if the customer’s own stock count says it runs out':'')+'.</p>'+
     '<p>After only one order of an item I use the customer’s overall rhythm and mark it low confidence; with no rhythm I make no guess. A customer + item whose last order is more than a year old gets no expected order.</p>'+
     '<p>If an order is overdue by more than 45 days <em>and</em> by more than its own usual gap, it is <strong>lapsed</strong>: it is not counted as expected and moves to the <strong>Lapsed (win back)</strong> list on Today (press “Show the … lapsed items”).</p></div>'+
     '<div class="gd-num"><h4>Targets</h4><p>You type the total for the month. It is split between customers and items partly by <strong>history</strong> (what they bought in the last 6 months) and partly by what they are <strong>expected</strong> to buy that month. The slider sets the mix (70% history to start).</p>'+
@@ -4066,7 +4130,7 @@ function v43GBody(){
     '<p class="note">A saved order keeps the price it had that day. Changing a deal or a price later only affects new orders.</p></div></div>';
   h+='<div class="card gd-card">'+H('Safety')+'<ul class="gd-list">'+
     '<li><strong>Nothing is deleted</strong> when you work normally. Cancelling an order changes its status; the line stays.</li>'+
-    '<li>Most changes add a line to the change history (shown on an account’s page, in Stock → History and in the Excel export), with the date and time. Changes are always made by you, the owner.</li>'+
+    '<li>Most changes add a line to the change history (shown on an account’s page, '+(on?'in Stock → History ':'')+'and in the Excel export), with the date and time. Changes are always made by you, the owner.</li>'+
     '<li>Excel imports always show a <strong>preview</strong> first. Only the rows you tick are saved, and rows I am unsure about are never saved until you choose.</li>'+
     '<li>Download a backup every week. <strong>Restore</strong> (in Data) is the one action that can overwrite. Restore puts back the backup\u2019s version of every record that changed since, and order lines added since the backup, in a month the backup also contains, are replaced. Extra pages made by a big import for such a month are emptied (kept, with no lines), so a big import can be undone. A month the backup does not have at all is left as it is. It shows what would change first, downloads a safety copy of your current data, and asks you to type RESTORE.</li>'+
     '<li>Before an import of 100 rows or more, a safety copy of your current data is downloaded for you automatically (the same file Restore makes). If it cannot be saved, you are asked whether to continue without it.</li></ul>'+
@@ -4074,17 +4138,17 @@ function v43GBody(){
     '<li><strong>New year:</strong> in <strong>Data</strong>, the <strong>New year helper</strong> chooses the period the dashboard shows and lists customers that stopped ordering so you can close them.</li>'+
     '<li><strong>Close account</strong> (on the Accounts page) hides a customer from lists and totals. Its orders and deals stay, and you can reopen it.</li>'+
     '<li><strong>Brand &amp; workspace</strong> (in Data) sets the company name, app name and colour shown everywhere, including file names.</li>'+
-    '<li><strong>Changing company or items:</strong> imports cannot create customers, so go in this order: add your customers first (<strong>Accounts</strong> → <strong>Add account</strong>), then import <strong>Items &amp; prices</strong>, then <strong>Deals</strong>, then stock and orders. Switch an old item off with <strong>Deactivate</strong> (in Items) instead of deleting it. A completely empty copy offers <strong>Start a new, empty workspace</strong> — only use it for a blank copy.</li></ul></div>';
+    '<li><strong>Changing company or items:</strong> imports cannot create customers, so go in this order: add your customers first (<strong>Accounts</strong> → <strong>Add account</strong>), then import <strong>Items &amp; prices</strong>, then <strong>Deals</strong>, then '+(on?'stock and orders':'orders')+'. Switch an old item off with <strong>Deactivate</strong> (in Items) instead of deleting it. A completely empty copy offers <strong>Start a new, empty workspace</strong> — only use it for a blank copy.</li></ul></div>';
   h+='<div class="card gd-card">'+H('Excel import cheat sheet')+
     '<p>Open <strong>Import Excel</strong>, choose what you are importing and pick your file (.xlsx or .csv). I find the columns by their headings; you can change them. These are the columns for each kind:</p><div class="gd-imps">';
-  for(i=0;i<V43G_TYPES.length;i++)h+=v43GImp(V43G_TYPES[i][0]);
+  for(i=0;i<types.length;i++)h+=v43GImp(types[i][0]);
   h+='</div>'+
     '<h4>Rules for every file</h4><ul class="gd-list">'+
     '<li><strong>Dates:</strong> day/month/year (25/09/2026), or 2026-09-25, or a real Excel date.</li>'+
     '<li><strong>Percent:</strong> write 65 or 65% (a bare 0.5 is read as 50%). For one percent or everything, always write <strong>1% or 100%</strong>: a bare 1 is refused, because it could mean either.</li>'+
     '<li><strong>Duplicates:</strong> an order line that is already saved (or appears twice in the file) is flagged as a duplicate and not added unless you tick it.</li>'+
     '<li>Nothing is saved until you press <strong>Import</strong>. Rows are checked again at that moment.</li></ul>'+
-    '<h4>If a cell is blank</h4><p class="note" style="margin-top:0">This depends on the kind of file:</p><ul class="gd-list gd-blank">'+V43G_BLANK.map(function(x){return '<li data-blank="'+x[0]+'" data-out="'+x[2]+'"><strong>'+esc(x[3])+':</strong> '+esc(x[4])+'</li>';}).join('')+'</ul></div>';
+    '<h4>If a cell is blank</h4><p class="note" style="margin-top:0">This depends on the kind of file:</p><ul class="gd-list gd-blank">'+V43G_BLANK.filter(function(x){return on||x[0].indexOf('stock.')!==0;}).map(function(x){return '<li data-blank="'+x[0]+'" data-out="'+x[2]+'"><strong>'+esc(x[3])+':</strong> '+esc(x[4])+'</li>';}).join('')+'</ul></div>';
   return h;}
 function v43GRender(){
   var b=$('guideBody');if(!b)return;

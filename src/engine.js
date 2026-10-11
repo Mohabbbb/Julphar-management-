@@ -219,7 +219,7 @@ function acctStock(ctx,accountName){
   var ex=X.acctExec[accountName]||[];
   for(i=0;i<ex.length;i++){if(!has(seen,ex[i].itemId)){seen[ex[i].itemId]=ex[i].item;}}
   for(key in X.acctBase){if(has(X.acctBase,key)&&key.indexOf(sep)===0){var id=key.slice(sep.length);if(!has(seen,id))seen[id]=X.acctBase[key][0].item;}}
-  var rows=[];
+  var rows=[],today=todayOf(ctx),pm=null;
   for(var id2 in seen){
     if(!has(seen,id2))continue;
     var im=ctx.itemById[id2],nm=im?(im.name||id2):(seen[id2]||id2);
@@ -227,10 +227,32 @@ function acctStock(ctx,accountName){
     var row={itemId:id2,item:nm,tracked:!!ap,baseQty:null,baseTs:null,delivered:null,dailyUse:null,usageSource:null,estOnHand:null,runOutDate:null,coverDays:null};
     if(ap){row.baseQty=ap.baseQty;row.baseTs=ap.baseTs;row.delivered=ap.delivered;row.dailyUse=ap.dailyUse;row.usageSource=ap.usageSource;
       row.estOnHand=ap.estOnHand;row.runOutDate=ap.runOutDate;row.coverDays=ap.coverDays;if(ap.noUsage)row.note='no usage data';}
+    else{  /* V44 (ADR-0010): no count -> estimate from the last order and the expected order's interval. Never feeds back into predictions. */
+      if(!pm)pm=predMap(ctx,accountName);
+      var p=has(pm,id2)?pm[id2]:null;
+      row.estimated=false;row.lastDate=null;row.lastQty=null;row.interval=null;
+      var pe=X.pairExec[accountName+'\u0001'+id2]||[],q;
+      for(q=0;q<pe.length;q++){if(!pe[q].opener&&pe[q].date&&(row.lastDate==null||pe[q].date>row.lastDate))row.lastDate=pe[q].date;}  /* the last order, shown even when there is no estimate */
+      if(p){
+        var lq=0,k;
+        for(k=0;k<pe.length;k++){if(!pe[k].opener&&pe[k].date===p.lastDate)lq+=pe[k].qty;}
+        var iv=p.interval,ds=daysBetween(p.lastDate,today),ro=addDays(p.lastDate,iv);
+        row.estimated=true;row.usageSource='orders';row.lastDate=p.lastDate;row.lastQty=lq;row.interval=iv;row.dailyUse=lq/iv;
+        row.estOnHand=Math.max(0,Math.floor(lq*(iv-ds)/iv));   /* = floor(lastQty - dailyUse*days), in exact integer steps */
+        row.runOutDate=ro;row.coverDays=Math.max(0,daysBetween(today,ro));
+      }
+    }
     rows.push(row);
   }
   rows.sort(function(a,b){return str(a.item).localeCompare(str(b.item));});
   return {rows:rows};
+}
+
+/* expected orders of one account, by item id (lastDate and interval exactly as predictions) */
+function predMap(ctx,accountName){
+  var pr=predictions(ctx).rows,m={},i;
+  for(i=0;i<pr.length;i++){if(pr[i].account===accountName)m[pr[i].itemId]=pr[i];}
+  return m;
 }
 
 /* ---------- predictions (2.3) ---------- */
