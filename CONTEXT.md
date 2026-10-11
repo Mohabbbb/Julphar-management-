@@ -84,6 +84,10 @@ Recalculating an order line's net value from the deal and standard discount in f
 An account's estimated quantity of an item still on its shelves, worked out only from what the account ordered and how fast it usually reorders. Never typed in.
 _Avoid_: customer stock, shelf stock
 
+**Stock entry**:
+The owner's switch that shows or hides everything for typing in stock (counts, deliveries, adjustments, stock import). Off by default; the owner turns it on or off from the Stock screen.
+_Avoid_: stock mode, manual stock
+
 **Own stock**:
 The owner's quantity of an item on hand, ready to sell. Not tracked for now: stock entry is hidden until the owner turns it back on.
 _Avoid_: inventory, warehouse

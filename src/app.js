@@ -1736,7 +1736,7 @@ try{var v42p=localStorage.getItem('jsp-period');if(v42p&&/^\d{4}$/.test(v42p))V4
 
 /* ---------- small helpers ---------- */
 function v42Ok(){return typeof Eng!=='undefined'&&Eng&&typeof Eng.ctx==='function';}
-/* V44 (ADR-0010): stock entry is ON only when master/settings.stockEntry === true. The page never writes this flag. */
+/* V44 (ADR-0010): stock entry is ON only when master/settings.stockEntry === true. Only the owner's switch on the Stock screen (v44SeDialog) writes it. */
 function v44On(){var s=Store.peek('master/settings');return !!(s&&s.stockEntry===true);}
 function v42InPeriod(d){return V42.all||V42.period==='all'||String(d||'').slice(0,4)===V42.period;}
 function v42Ctx(){if(!V42.ctx){V42.ctx=Eng.ctx(Store.all(),localDate());V42.cache={};}return V42.ctx;}
@@ -2795,7 +2795,30 @@ window.addEventListener('beforeunload',function(e){if(v43Dirty()||V43I.running){
 var V44={acct:'',wired:false,tag:null};
 var V44_PST={lapsed:['b-bad','Lapsed'],overdue:['b-bad','Overdue'],due:['b-review','Due'],soon:['b-std','Soon'],later:['b-off','Later']};
 function v44StockTag(){var t=document.querySelector('#view-stock .h-row .tag');if(!t)return;if(V44.tag==null)V44.tag=t.textContent;
-  t.textContent=v44On()?V44.tag:'worked out from each customer’s orders';}
+  t.textContent=v44On()?V44.tag:'worked out from each customer’s orders';v44SeBar();}
+/* The owner's switch for stock entry: one bar above the Stock screen, a details dialog, one settings write + one audit row. */
+function v44SeBar(){
+  var body=$('stockBody');if(!body)return;var bar=$('seBar');
+  if(!bar){bar=document.createElement('div');bar.id='seBar';bar.className='se-bar';body.parentNode.insertBefore(bar,body);
+    bar.addEventListener('click',function(e){if(e.target.closest('#seBtn'))v44SeDialog();});}
+  var on=v44On();
+  bar.innerHTML='<span class="se-state">Stock entry '+v42Chip(on?'b-good':'b-off',on?'On':'Off')+'</span>'+
+    '<button type="button" class="btn ghost sm" id="seBtn"><span aria-hidden="true" class="se-i">i</span> Stock entry settings</button>';
+}
+function v44SeDialog(){
+  var on=v44On(),next=!on;
+  var html=on?
+    '<p>Stock entry is <strong>switched on</strong>. You can type counts, receive deliveries, adjust stock and import stock counts.</p>'+
+    '<p>Turning it off hides all of that again. Customers’ stock and expected orders keep working from orders. Nothing is deleted: counts you already saved stay, and come back if you turn entry on again.</p>':
+    '<p>Stock entry is <strong>switched off</strong>. Customers’ stock and expected orders are worked out from orders only.</p>'+
+    '<p>Turning it on adds: count boxes for your own stock, Receive delivery, Adjust and Count, the Stock counts type in Import Excel, the stock tile and stock alerts on Today, and stock hints in New order.</p>'+
+    '<p>Nothing is deleted either way, and you can switch back at any time here.</p>';
+  openDialog({title:'Stock entry',html:html,ok:on?'Turn stock entry off':'Turn stock entry on',onOk:function(){
+    return v42PutDoc('master/settings',function(b){b.stockEntry=next;}).then(function(){
+      return v42Audit([auditRow('SETTINGS','','','stockEntry',String(on),String(next),'Owner switched stock entry '+(next?'on':'off'))]);
+    }).then(function(){toast('Stock entry switched '+(next?'on':'off'),'good');});
+  }});
+}
 function v44RenderStock(){
   var el=$('stockBody');if(!el)return;
   try{

@@ -30,7 +30,7 @@ Expected order = last order + usual interval, at the usual (median) quantity and
 
 ## 2. Page — `src/app.js`, `src/page.html`, `src/css/*`
 
-**Switch:** stock entry is ON only when `master/settings` has `stockEntry === true`. Absent or anything else = OFF. The page never writes this flag.
+**Switch:** stock entry is ON only when `master/settings` has `stockEntry === true`. Absent or anything else = OFF. The flag is written only by the owner's **Stock entry settings** button on the Stock screen: a details dialog explains what turning it on or off changes; confirming saves `stockEntry` true/false and one audit row (field `stockEntry`, old → new). Cancel writes nothing; nothing is ever deleted.
 
 **When OFF (the default):**
 - There is nowhere to type or save own stock or customer stock: no count inputs, no "Save" / "Save all changed" for stock, no Receive delivery, Adjust, Count, Set up / opening quantities, no "Record a count" for a customer.

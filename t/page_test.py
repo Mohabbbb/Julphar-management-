@@ -397,6 +397,90 @@ def on_dashboard_and_no_page_errors(s):
     assert not s.errors, '\n'.join(s.errors)
 
 
+
+# ---- Switching stock entry from the Stock screen (owner request 11 Oct 2026) ----
+SE_BUTTON = 'Stock entry settings'
+
+
+def open_stock_entry_dialog(s):
+    s.go('Stock')
+    btn = s.buttons(SE_BUTTON, exact=True)
+    assert btn, '"%s" button missing on the Stock screen' % SE_BUTTON
+    btn[0].click()
+    dlg = s.pg.get_by_role('dialog')
+    dlg.wait_for(timeout=SHORT)
+    return dlg
+
+
+def stored_settings_and_audit(s):
+    raw = s.stored_writes()
+    docs = json.loads(raw) if raw else {}
+    settings = docs.get('master/settings') or {}
+    audit = [r for k, v in docs.items() if k.startswith('audit/') for r in (v.get('rows') or [])]
+    return settings, audit
+
+
+@test('off')
+def stock_entry_button_explains_what_turning_it_on_adds(s):
+    dlg = open_stock_entry_dialog(s)
+    t = ci(dlg.inner_text())
+    assert 'switched off' in t, 'dialog does not say stock entry is off'
+    for words in ('count', 'receive', 'import', 'nothing is deleted'):
+        assert words in t, 'dialog does not mention "%s"' % words
+    assert dlg.get_by_role('button', name='Turn stock entry on', exact=True).count() == 1
+
+
+@test('off')
+def cancelling_the_stock_entry_dialog_writes_nothing(s):
+    dlg = open_stock_entry_dialog(s)
+    dlg.get_by_role('button', name='Cancel', exact=True).click()
+    s.pg.wait_for_timeout(300)
+    assert s.stored_writes() in (None, '{}'), 'cancel wrote data: %s' % (s.stored_writes() or '')[:200]
+    assert not s.visible(s.main.get_by_role('spinbutton')), 'stock entry appeared after Cancel'
+
+
+@test('off')
+def turning_stock_entry_on_shows_entry_saves_the_setting_and_an_audit_row(s):
+    dlg = open_stock_entry_dialog(s)
+    dlg.get_by_role('button', name='Turn stock entry on', exact=True).click()
+    s.pg.get_by_role('dialog').wait_for(state='hidden', timeout=SHORT)
+    s.pg.wait_for_timeout(400)
+    s.go('Stock')
+    assert s.visible(s.main.get_by_role('spinbutton')), 'no count boxes after turning stock entry on'
+    settings, audit = stored_settings_and_audit(s)
+    assert settings.get('stockEntry') is True, 'settings.stockEntry not saved as true: %s' % settings
+    rows = [r for r in audit if r.get('field') == 'stockEntry']
+    assert rows and str(rows[-1].get('new')) in ('true', 'True', 'on', 'On'), 'no audit row for the switch: %s' % audit[-3:]
+    s.go('Import Excel')
+    assert 'stock counts' in ci(s.text()), 'Import does not offer Stock counts after turning entry on'
+
+
+@test('on')
+def turning_stock_entry_off_hides_entry_again_and_keeps_counts(s):
+    dlg = open_stock_entry_dialog(s)
+    assert 'switched on' in ci(dlg.inner_text()), 'dialog does not say stock entry is on'
+    dlg.get_by_role('button', name='Turn stock entry off', exact=True).click()
+    s.pg.get_by_role('dialog').wait_for(state='hidden', timeout=SHORT)
+    s.pg.wait_for_timeout(400)
+    s.go('Stock')
+    assert "your own stock isn't tracked — stock entry is switched off." in ci(s.text()), 'entry not hidden after turning it off'
+    assert not s.visible(s.main.get_by_role('spinbutton')), 'count boxes still shown after turning entry off'
+    settings, audit = stored_settings_and_audit(s)
+    assert settings.get('stockEntry') is False, 'settings.stockEntry not saved as false: %s' % settings
+    docs = json.loads(s.stored_writes())
+    assert not any(k.startswith('stock/') for k in docs), 'turning entry off wrote stock documents'
+
+
+@test('narrow')
+def stock_entry_button_fits_a_phone_screen(s):
+    s.go('Stock')
+    btn = s.buttons(SE_BUTTON, exact=True)
+    assert btn, 'button missing at 390 px'
+    box = btn[0].bounding_box()
+    assert box and box['x'] >= 0 and box['x'] + box['width'] <= 390, 'button off screen: %s' % box
+    assert s.pg.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), 'page scrolls sideways'
+
+
 # ---------------------------------------------------------------- runner
 def main():
     base = fixture_docs()

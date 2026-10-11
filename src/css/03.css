@@ -681,3 +681,8 @@ input[type=range]{padding:0;min-height:0;accent-color:var(--brand)}
   .topnav .topsecs{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:30;background:var(--brand-deep);padding:0 10px 8px;box-shadow:var(--shadow)}
   .topnav .toppages{background:var(--brand-deep);padding:6px 10px 10px}
 }
+
+/* V44 stock entry switch */
+.se-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;margin:0 0 14px}
+.se-bar .se-state{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft)}
+.se-bar .se-i{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;font:600 11px/1 var(--font-mono,monospace);font-style:italic}
