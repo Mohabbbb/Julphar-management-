@@ -80,35 +80,32 @@ Recalculating an order line's net value from the deal and standard discount in f
 
 ## Stock
 
-**Own stock**:
-The owner's quantity of an item on hand, ready to sell.
-_Avoid_: inventory, warehouse
-
 **Account stock**:
-An account's estimated quantity of an item still on its shelves.
+An account's estimated quantity of an item still on its shelves, worked out only from what the account ordered and how fast it usually reorders. Never typed in.
 _Avoid_: customer stock, shelf stock
 
+**Own stock**:
+The owner's quantity of an item on hand, ready to sell. Not tracked for now: stock entry is hidden until the owner turns it back on.
+_Avoid_: inventory, warehouse
+
 **Count**:
-A quantity of an item physically counted at a point in time. The first count of an item is its opening count. A count is the starting point for all stock maths after it.
+A quantity of an item physically counted at a point in time. Part of own stock, so hidden for now.
 _Avoid_: stock take, baseline (in conversation)
 
 **Untracked item**:
-An item with no count. Its stock is unknown and shown as "Not tracked", never as zero.
+An item whose stock is unknown. Shown as "Not tracked", never as zero.
 
 **Reserved**:
 Quantity on Pending (and, by default, Quoted) order lines — promised but not yet delivered.
 
-**Available**:
-Own stock on hand minus reserved.
-
-**Cover**:
-How many days available stock lasts at the item's recent daily use.
-_Avoid_: runway, days left
-
 ## Forecasting and targets
 
+**Last order**:
+The most recent Executed order line of one item by one account. The anchor every expected order is counted from.
+_Avoid_: previous order, latest invoice
+
 **Expected order**:
-A predicted next order of one item by one account, with a date, quantity and value worked out from that account's past ordering rhythm.
+A predicted next order of one item by one account: its last order plus the usual interval, at the usual quantity and the last order's price.
 _Avoid_: forecast, prediction, reorder
 
 **Ordering rhythm**:
