@@ -15,7 +15,7 @@ var Store=(function(){
   "use strict";
   var COLS=['master','deals','orders','audit','plan','stock','targets'],LSKEY='jsp40-local-docs';
   var seed={};try{seed=JSON.parse(document.getElementById('seed').textContent)||{};}catch(e){seed={};}
-  var docs={},subs=[],st={mode:'starting',note:'Connecting to the database…',error:null},db=null,lastStamp='';
+  var docs={},subs=[],st={mode:'starting',note:'Connecting to the database…',error:null,failed:[]},db=null,lastStamp='';
   function clone(o){return o==null?o:JSON.parse(JSON.stringify(o));}
   function emit(info){subs.slice().forEach(function(cb){try{cb(docs,info||{});}catch(e){if(window.console)console.error(e);}});}
   function setStatus(mode,note){st.mode=mode;st.note=note;emit({status:true});}
@@ -42,10 +42,11 @@ var Store=(function(){
           db.collection(c).onSnapshot(function(snap){
             if(st.mode!=='empty')Object.keys(docs).forEach(function(p){if(p.split('/')[0]===c)delete docs[p];}); /* empty mode: keep showing the snapshot while it loads */
             snap.docs.forEach(function(d){if(d.exists)docs[c+'/'+d.id]=d.data();});
+            st.failed=st.failed.filter(function(x){return x!==c;}); /* this collection is readable again */
             if(!first[c]){first[c]=1;pending--;if(pending===0){decide();resolve();}}
             else{if(st.mode==='empty'&&docs['master/settings'])setStatus('db','Saved in the platform database');else emit({remote:true,col:c});}
-          },function(e){st.error=e;emit({error:e});if(!first[c]){first[c]=1;pending--;if(pending===0){decide();resolve();}}});
-        }catch(e){st.error=e;first[c]=1;pending--;if(pending===0){decide();resolve();}}
+          },function(e){st.error=e;if(st.failed.indexOf(c)<0)st.failed.push(c);emit({error:e});if(!first[c]){first[c]=1;pending--;if(pending===0){decide();resolve();}}});
+        }catch(e){st.error=e;if(st.failed.indexOf(c)<0)st.failed.push(c);first[c]=1;pending--;if(pending===0){decide();resolve();}}
       });
     });
   }

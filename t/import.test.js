@@ -135,3 +135,43 @@ test.describe('Value parsing', () => {
     assert.equal(Imp.num(''), null);
   });
 });
+
+/* F5: the preview computes the same net the New order screen does (qty × (RSP × (1 − discount)), same multiplication order) and rounds it with the same rule, Eng.money,
+   also at half-cent ties; the value that is SAVED (netExact) is untouched. */
+test.describe('Order import preview rounding matches New order', () => {
+  const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });   // how the app's SAR() shows a number
+  const screen = (qty, rsp, pct) => { const nu = rsp * (1 - pct); return Eng.money(qty * nu); };       // New order: nu = ref*(1-pct); nv = money(qty*nu) (G2: the saved line's net)
+  const items = ctx.items.filter(i => i.active !== false && typeof i.rsp === 'number' && i.rsp > 0);
+  test('preview net equals the New order net for every item at many quantities and discounts', () => {
+    const lines = [], want = [];
+    for (const it of items) for (const q of [1, 3, 7, 10, 25, 50, 125, 333]) for (const p of [0.33, 0.35, 0.4, 0.55]) {
+      lines.push(['2026-10-05', 'Aster Chain', it.name, q, p * 100]); want.push([q, it.rsp, p]);
+    }
+    const plan = planOrders(lines).rows;
+    let bad = [];
+    plan.forEach((r, i) => {
+      if (r.status !== 'ready' && r.status !== 'duplicate') return;
+      const [q, rsp, p] = want[i], exp = screen(q, rsp, p);
+      if (r.data.net !== exp || fmt(r.data.net) !== fmt(exp)) bad.push(q + ' x ' + rsp + ' @' + p + ' preview ' + fmt(r.data.net) + ' screen ' + fmt(exp));
+    });
+    assert.equal(bad.length, 0, bad.length + ' mismatches, e.g. ' + bad.slice(0, 3).join('; '));
+  });
+  test('the value that is saved (netExact) is unchanged: qty × (RSP × (1 − discount))', () => {
+    const it = items[0], r = planOrders([['2026-10-05', 'Aster Chain', it.name, 7, 33]]).rows[0];
+    assert.equal(r.data.netExact, 7 * (it.rsp * (1 - r.data.pct)));
+    assert.equal(r.data.net, Number(r.data.net.toFixed(2)));
+  });
+  test('the 499 saved fixture lines still add up to 721,249.04', () => {
+    let n = 0, c = 0;
+    Object.keys(docs).filter(k => k.startsWith('orders/')).forEach(k => docs[k].rows.forEach(r => { if (r.status === 'Executed') { n += r.net; c++; } }));
+    assert.equal(c, 499); assert.equal(n.toFixed(2), '721249.04');
+  });
+});
+
+test.describe('Order import prices by the row date (G1)', () => {
+  test('the price rule is asked for each row\'s own date', () => {
+    const seen = [];
+    planOrders([['2026-03-01', 'Adwaa Nimar', ADOL, 5, ''], ['2026-10-05', 'Adwaa Nimar', ADOL, 6, '']], { price: (a, i, day) => { seen.push(day); return { pct: 0.5, src: 'Standard rule' }; } });
+    assert.deepEqual(seen, ['2026-03-01', '2026-10-05']);
+  });
+});

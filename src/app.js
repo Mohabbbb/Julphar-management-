@@ -68,14 +68,14 @@ function renderKpis(){
   document.getElementById('kpis').innerHTML=[
     {l:v42NetLabel(),v:K(totalNet),s:exec.length+' order lines · executed',h:1,id:'kpiNet',t:SAR(totalNet)},
     {l:'This month · '+mLab(cm),v:K(cmNet),s:INT(cmLines)+' lines · vs '+mLab(pm)+' '+K(pmNet)+(chg!=null?' ('+(chg>=0?'+':'')+chg.toFixed(0)+'%)':''),id:'kpiMonth'},
-    {l:'YTD Quantity',v:INT(totalQty),s:'units',id:'kpiQty'},
+    {l:'Quantity · '+v44PeriodWord(),v:INT(totalQty),s:'units',id:'kpiQty'},
     {l:'Active Accounts',v:acctsWithSales,s:'of '+v42OpenAcctN()+' with sales'},
     {l:'Active Items',v:itemsWithSales,s:'SKUs with movement'},
     {l:'Avg Discount',v:PCT(avgDisc),s:'weighted'}
   ].map(function(c){return '<div class="kpi'+(c.h?' hero':'')+'"'+(c.id?' id="'+c.id+'"':'')+(c.t?' title="'+c.t+' SAR" data-exact="'+(Math.round(totalNet*100)/100)+'"':'')+'><div class="k-label">'+c.l+'</div><div class="k-val'+(c.h?'':' sm')+'">'+c.v+'</div><div class="k-sub">'+c.s+'</div></div>';}).join('');
-  var yy=document.getElementById('ytdYear');if(yy)yy.textContent=(exec.map(function(o){return o.d||'';}).sort().pop()||localDate()).slice(0,4);
+  var yy=document.getElementById('ytdYear');if(yy)yy.textContent=(V42.period==='all'?'all-periods':v44PeriodWord());
   var meta=M.accounts+' accounts · '+M.items+' items · '+M.activeDeals+' active deals · '+M.orders+' order lines';
-  document.getElementById('footMeta').textContent='YTD '+SAR(totalNet)+' SAR';
+  document.getElementById('footMeta').textContent='Net sales · '+v44PeriodWord()+' '+SAR(totalNet)+' SAR';
   document.getElementById('sideMeta').textContent=meta;
   var ranked=Object.keys(byAcct).map(function(a){return{a:a,net:byAcct[a].net};}).sort(function(x,y){return y.net-x.net;});
   function sh(n){return totalNet?(ranked.slice(0,n).reduce(function(s,r){return s+r.net;},0)/totalNet*100).toFixed(1):'0.0';}
@@ -156,7 +156,7 @@ function apDealsTable(x){
   var rows=apDealRows(x),show=rows.slice(0,AP.limit);
   if(!x.deals.length)return '<p class="muted">No active deals for this account. Orders price at each item’s standard discount, or REVIEW when an item has none.</p>';
   if(!rows.length)return '<p class="muted">No deals match this filter.</p>';
-  var h='<div class="scroll"><table><thead><tr><th>Item</th><th class="num">RSP</th><th class="num">Standard</th><th class="num">Deal</th><th class="num">Net / unit</th><th class="num">Ordered YTD</th><th><span class="sr-only">Action</span></th></tr></thead><tbody>'+
+  var h='<div class="scroll"><table><thead><tr><th>Item</th><th class="num">RSP</th><th class="num">Standard</th><th class="num">Deal</th><th class="num">Net / unit</th><th class="num">Ordered · '+v44PeriodWord()+'</th><th><span class="sr-only">Action</span></th></tr></thead><tbody>'+
     show.map(function(d){return '<tr><td>'+esc(d.item)+(d.below?' <span class="badge b-review">'+((d.std-d.pct)*100).toFixed(1)+' pts below standard</span>':'')+'</td>'+
       '<td class="num">'+SAR(d.rsp)+'</td><td class="num muted">'+PCT(d.std)+'</td><td class="num"><strong>'+PCT(d.pct)+'</strong></td><td class="num">'+SAR(d.net)+'</td>'+
       '<td class="num">'+(d.ytd>0?SAR(d.ytd):'<span class="muted">—</span>')+'</td>'+
@@ -175,7 +175,7 @@ function acctPage(name){
   var h='<div class="card"><div class="ap-head"><div style="flex:1;min-width:180px"><div class="eyebrow">'+esc(typ)+(ar.id?' · '+esc(ar.id):'')+(ar.active===false?' · <span class="badge b-off">'+(ar.closedAt?'Closed':'Inactive')+'</span>':'')+'</div><h3 style="font-size:19px;margin-top:3px">'+esc(name)+'</h3></div>'+
     (ar.id?'<button type="button" class="btn ghost sm" data-apact="edit">Edit account</button>'+(ar.active===false?'<button type="button" class="btn ghost sm" data-apact="reopen">Reopen</button>':'<button type="button" class="btn ghost sm" data-apact="close">Close account</button>'):'')+'<button type="button" class="btn ghost sm" data-apact="deal">Change a deal</button><button type="button" class="btn sm" data-apact="new">+ New order</button></div>'+v42ClosedBanner(ar)+
     '<div class="kpis" style="margin:12px 0 0">'+
-    '<div class="kpi"><div class="k-label">Net sales YTD</div><div class="k-val sm">'+SAR(x.net)+'</div><div class="k-sub">SAR · '+(share*100).toFixed(1)+'% of all accounts</div></div>'+
+    '<div class="kpi"><div class="k-label">Net sales · '+v44PeriodWord()+'</div><div class="k-val sm">'+SAR(x.net)+'</div><div class="k-sub">SAR · '+(share*100).toFixed(1)+'% of all accounts</div></div>'+
     '<div class="kpi"><div class="k-label">Orders</div><div class="k-val sm">'+INT(x.lines)+' lines</div><div class="k-sub">'+INT(x.orderDays)+' order day(s) · '+INT(x.qty)+' units</div></div>'+
     '<div class="kpi"><div class="k-label">Active deals</div><div class="k-val sm">'+INT(x.deals.length)+'</div><div class="k-sub">'+INT(x.ordered)+' ordered · '+INT(x.never)+' never ordered</div></div>'+
     '<div class="kpi'+(stale?' ap-warn':'')+'"><div class="k-label">Last order</div><div class="k-val sm">'+(x.last?esc(x.last):'None yet')+'</div><div class="k-sub">'+(x.ago!=null?INT(x.ago)+' day(s) ago':'no executed orders')+'</div></div></div>'+
@@ -312,19 +312,12 @@ document.getElementById('pcItem').addEventListener('change',pcShow);
 prAccount.addEventListener('change',function(){pcAccount.value=prAccount.value;pcShow();});
 
 // ---- order builder engine
-function resolve(account,item){
-  if(!item)return{pct:null,src:''};
-  /* No account = no basis to price on. Never fall through to the standard rate,
-     which would silently produce a "priced" order that ignores account deals. */
-  if(!account)return{pct:null,src:'NO ACCOUNT'};
-  var im=itemMap[item],key=account+'\u241F'+item;
-  if(!im||im.active===false||typeof im.rsp!=='number'||!isFinite(im.rsp)||im.rsp<0)return{pct:null,src:'REVIEW REQUIRED'};
-  if(Object.prototype.hasOwnProperty.call(dealMap,key)){
-    var dk=dealMap[key];
-    return typeof dk==='number'&&isFinite(dk)&&dk>=0&&dk<=1?{pct:dk,src:'Account deal'}:{pct:null,src:'REVIEW REQUIRED'};
-  }
-  if(typeof im.std==='number'&&isFinite(im.std)&&im.std>=0&&im.std<=1)return{pct:im.std,src:'Standard rule'};
-  return{pct:null,src:'REVIEW REQUIRED'};
+/* day = the date the price is for (an order's own date); omitted = today. Deals that had not started, or had ended, on that day are not used. */
+function resolve(account,item,day){
+  if(!item)return {pct:null,src:''};
+  if(!account)return {pct:null,src:'NO ACCOUNT'};
+  var im=itemMap[item];if(!im)return {pct:null,src:'REVIEW REQUIRED'};
+  return Pricing.resolve(acctMap[account]||{name:account},im,D.deals,(day&&validDate(day))?day:localDate());
 }
 var obAccount=document.getElementById('obAccount');
 var lines=document.getElementById('lines');
@@ -366,9 +359,10 @@ function addLine(item,qty){
 document.getElementById('addLine').addEventListener('click',function(){addLine();recalc();});
 obAccount.addEventListener('change',recalc);
 document.getElementById('obStatus').addEventListener('change',recalc);
+document.getElementById('obDate').addEventListener('input',recalc);document.getElementById('obDate').addEventListener('change',recalc);   /* the price follows the order date */
 var lastOrder={lines:[],tQty:0,tGross:0,tDisc:0,tNet:0};
 function recalc(){
-  var account=obAccount.value,tQty=0,tGross=0,tDisc=0,tNet=0,review=0,filled=0,rows=[];
+  var account=obAccount.value,orderDay=document.getElementById('obDate').value,tQty=0,tGross=0,tDisc=0,tNet=0,review=0,filled=0,rows=[];
   Array.prototype.forEach.call(lines.querySelectorAll('.line'),function(row){
     var item=row.querySelector('.li-item').value.trim(),qty=parseFloat(row.querySelector('.li-qty').value);
     var refEl=row.querySelector('.ro-ref .ro-val'),netEl=row.querySelector('.ro-net .ro-val');
@@ -376,14 +370,14 @@ function recalc(){
     row.classList.remove('is-review');discEl.classList.remove('is-ovr');srcEl.classList.remove('s-ovr');
     if(!item){refEl.textContent='—';discEl.placeholder='auto';srcEl.textContent='';netEl.textContent='—';
       if(row.querySelector('.li-qty').value!==''){review++;row.classList.add('is-review');}return;}
-    filled++;var im=itemMap[item]||{},ref=(im.rsp!=null)?im.rsp:null,r=resolve(account,item);
+    filled++;var im=itemMap[item]||{},ref=(im.rsp!=null)?im.rsp:null,r=resolve(account,item,orderDay);
     refEl.textContent=ref!=null?SAR(ref):'—';
     // The engine's rate is always shown as the placeholder, so overriding is an
     // informed choice rather than a blind one.
     discEl.placeholder=(r.pct!=null)?(r.pct*100).toFixed(2):'auto';
     var ovrRaw=discEl.value.trim(),pct=r.pct,src=r.src,bad=false;
     if(ovrRaw!==''){
-      var ovr=parseFloat(ovrRaw);
+      var ovr=numIn(ovrRaw);
       // Percent numbers, same rule as the workbook: 40 means 40%.
       if(!isFinite(ovr)||ovr<0||ovr>100){bad=true;}
       else{pct=ovr/100;src='Manual override';discEl.classList.add('is-ovr');srcEl.classList.add('s-ovr');}
@@ -397,7 +391,7 @@ function recalc(){
     srcEl.textContent=(src==='Manual override')?'manual':(src==='Account deal'?'deal':'std');
     if(ref==null){netEl.textContent='—';review++;row.classList.add('is-review');return;}
     if(!fcValidQty(qty)||qty<=0){netEl.textContent='—';review++;row.classList.add('is-review');return;}
-    var nu=ref*(1-pct),nv=qty*nu,da=qty*ref*pct;netEl.textContent=SAR(nv);
+    var nu=ref*(1-pct),nv=Eng.money(qty*nu),da=Eng.money(Eng.money(qty*ref)-nv);netEl.textContent=SAR(nv);   /* same rule as the saved line */
     tQty+=qty;tGross+=qty*ref;tDisc+=da;tNet+=nv;rows.push({item:item,qty:qty,ref:ref,pct:pct,src:src,nu:nu,nv:nv});
   });
   document.getElementById('tQty').textContent=INT(tQty);document.getElementById('tGross').textContent=SAR(tGross);
@@ -473,7 +467,7 @@ function fcRecalc(){
     discEl.placeholder=(r.pct!=null)?(r.pct*100).toFixed(2):'auto';
     var fcOvrRaw=discEl.value.trim(),pct=r.pct,src=r.src;
     if(fcOvrRaw!==''){
-      var fcOvr=parseFloat(fcOvrRaw);
+      var fcOvr=numIn(fcOvrRaw);
       // Percent numbers, same rule as the workbook: 40 means 40%.
       if(!isFinite(fcOvr)||fcOvr<0||fcOvr>100){
         srcEl.innerHTML='<span class="badge b-review">0–100 only</span>';nuEl.textContent='—';nvEl.textContent='—';
@@ -838,8 +832,16 @@ function errText(e){
   return (e&&e.message)?e.message:'Something went wrong. Nothing was saved.';
 }
 var toastT=null;
-function toast(msg,kind){var t=$('toast');if(!t)return;t.className='toast show '+(kind||'');t.innerHTML=msg;clearTimeout(toastT);toastT=setTimeout(function(){t.className='toast';},5000);}
-function numIn(v){v=String(v==null?'':v).trim().replace(/,/g,'');if(v==='')return null;var n=Number(v);return isFinite(n)?n:NaN;}
+var histFailAt=0;   /* when a history (audit) write last failed: a success toast right after it must not hide that */
+function toast(msg,kind){var t=$('toast');if(!t)return;var ms=5000;
+  if(kind==='good'&&histFailAt&&Date.now()-histFailAt<4000){histFailAt=0;msg+=' — but its history row could not be written. Use Data › Data check to review.';kind='warn';ms=20000;}
+  t.className='toast show '+(kind||'');t.innerHTML=msg;clearTimeout(toastT);toastT=setTimeout(function(){t.className='toast';},ms);}
+/* A typed number is accepted only when it cannot be misread: 12, 12.5, .5, or thousands grouped like 1,200 / 1,200.50. '12,5', '4 5', '0x1A', '1e3' give NaN (callers show NUMMSG), never a guess. */
+var NUMMSG='Please type a number like 12.5 (plain digits and a dot; commas only like 1,200).';
+function numIn(v){v=String(v==null?'':v).trim();if(v==='')return null;
+  if(/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(v))v=v.replace(/,/g,'');
+  else if(!/^(\d+\.?\d*|\.\d+)$/.test(v))return NaN;
+  var n=Number(v);return isFinite(n)?n:NaN;}
 function validDate(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s||''))return false;var p=s.split('-').map(Number),d=new Date(Date.UTC(p[0],p[1]-1,p[2]));return d.getUTCMonth()===p[1]-1&&d.getUTCDate()===p[2];}
 function idNum(id){var m=/(\d+)$/.exec(String(id||''));return m?parseInt(m[1],10):0;}
 function pad(n,w){n=String(n);while(n.length<w)n='0'+n;return n;}
@@ -890,21 +892,35 @@ function mutate(path,fn){
 function auditPath(){var m=localDate().slice(0,7),p='audit/'+m,i=1;
   while(Store.peek(p)&&JSON.stringify(Store.peek(p)).length>200000){i++;p='audit/'+m+'-'+i;}return p;}
 function auditRow(type,account,item,field,oldv,newv,reason,notes){return {ts:nowISO(),type:type,account:account||'',item:item||'',field:field||'',old:oldv==null?'':oldv,'new':newv==null?'':newv,reason:reason||'',by:'owner',notes:notes||''};}
+function addAuditOnce(rows){
+  return mutate(auditPath(),function(b){var have={};b.rows.forEach(function(r){have[JSON.stringify(r)]=1;});rows.forEach(function(r){if(!have[JSON.stringify(r)])b.rows.push(r);});});}
 function commit(steps,auditRows){
   var i=0;
   function next(){if(i>=steps.length)return Promise.resolve();var s=steps[i++];return mutate(s.path,s.fn).then(next);}
   return next().then(function(){
     if(!auditRows||!auditRows.length)return;
-    return mutate(auditPath(),function(b){b.rows=b.rows.concat(auditRows);})['catch'](function(e){toast('Saved, but the history row could not be written: '+esc(errText(e)),'warn');});
+    return addAuditOnce(auditRows).then(function(){},function(e){
+      histFailAt=Date.now();toast('Saved, but the history row could not be written: '+esc(errText(e)),'warn');
+      return {histFailed:true,rows:auditRows};});   /* callers may offer a retry; the data itself is saved */
   });
 }
+/* the order is saved but its history row is not: say so, and offer to write just that row (never twice) */
+var pendingHist=null,HIST_NOTE=' <span data-hnote><strong>But its history row could not be written.</strong> <button type="button" class="btn sm" data-hretry="1">Retry saving history</button> (or check later in Data › Data check.)</span>';
+document.addEventListener('click',function(e){var b=e.target.closest('[data-hretry]');if(!b||!pendingHist)return;
+  var rows=pendingHist;b.disabled=true;
+  addAuditOnce(rows).then(function(){
+    pendingHist=null;Array.prototype.forEach.call(document.querySelectorAll('[data-hnote]'),function(n){n.parentNode.removeChild(n);});toast('History saved','good');},
+    function(err){b.disabled=false;toast('The history row is still not saved: '+esc(errText(err)),'warn');});});
 function findOrder(id){for(var i=0;i<D.orders.length;i++)if(D.orders[i].id===id)return D.orders[i];return null;}
-function nextTxNum(extra){var m=0;D.orders.forEach(function(o){m=Math.max(m,idNum(o.id));});(extra||[]).forEach(function(r){m=Math.max(m,idNum(r.id));});return m+1;}
-function priceRow(r){r.discAmt=r.qty*r.rsp*r.pct;r.netUnit=r.rsp*(1-r.pct);r.net=r.qty*r.netUnit;return r;}
+function nextTxNum(extra){var lb=v44LoadBlock();if(lb)throw new Error(lb+' Nothing was saved.');var m=0;D.orders.forEach(function(o){m=Math.max(m,idNum(o.id));});(extra||[]).forEach(function(r){m=Math.max(m,idNum(r.id));});return m+1;}
+/* NEW lines (and lines the owner edits/re-prices): net = qty × exact unit net, rounded to halalas by the engine's one rule (Eng.money); discount = gross − net,
+   so gross − discount = net to the halala and the lines add up to the total. The unit net stays exact. Lines saved before this change are never rewritten. */
+function priceRow(r){r.netUnit=r.rsp*(1-r.pct);r.net=Eng.money(r.qty*r.netUnit);r.discAmt=Eng.money(Eng.money(r.qty*r.rsp)-r.net);return r;}
 
 /* ---------- Order Builder: Save order ---------- */
 $('btnReq').addEventListener('click',function(){
-  recalc();var o=lastOrder,N='reqNote';
+  recalc();var o=lastOrder,N='reqNote',lb=v44LoadBlock();
+  if(lb)return setMsg(N,'b-bad',lb+' Nothing was saved.');
   if(!o.account)return setMsg(N,'b-review','Select an account first.');
   var acc=acctMap[o.account];if(!acc||!acc.active)return setMsg(N,'b-review','This account is inactive. Reactivate it on its account page first.');
   if(o.review)return setMsg(N,'b-review','Fix the '+o.review+' line(s) marked REVIEW first (missing price, unknown or inactive item, or quantity). Nothing was saved.');
@@ -930,11 +946,12 @@ $('btnReq').addEventListener('click',function(){
         src:l.src,source:'Platform order '+ref,status:st,notes:notes||null,orderRef:ref,createdAt:ts,updatedAt:ts});if(st==='Executed')r.execAt=ts;ids.push(r.id);rowsOut.push(r);b.rows.push(r);});
     }}],null).then(function(){
       return commit([],rowsOut.map(function(r){return auditRow('ADD_ORDER',r.account,r.item,'line','',r.id+' · '+r.date+' · qty '+r.qty+' · '+(r.pct*100).toFixed(2)+'% · net '+SAR(r.net)+' · '+r.status,notes,'order '+ref);}));
-    }).then(function(){
+    }).then(function(hres){
+      var hf=!!(hres&&hres.histFailed);pendingHist=hf?hres.rows:null;
       $('btnReq').disabled=false;
-      setMsg(N,'b-good','Order saved: '+ids.length+' line(s) '+esc(ids[0])+(ids.length>1?'–'+esc(ids[ids.length-1]):'')+', net '+SAR(o.tNet)+' SAR, '+esc(st)+', '+esc(dt)+'. <button type="button" class="btn ghost sm" data-goorders="'+esc(o.account)+'">See in Orders</button>');
+      setMsg(N,hf?'b-review':'b-good','Order saved: '+ids.length+' line(s) '+esc(ids[0])+(ids.length>1?'–'+esc(ids[ids.length-1]):'')+', net '+SAR(o.tNet)+' SAR, '+esc(st)+', '+esc(dt)+'.'+(hf?HIST_NOTE:'')+' <button type="button" class="btn ghost sm" data-goorders="'+esc(o.account)+'">See in Orders</button>');
       toast('Order saved · '+ids.length+' line(s) · '+SAR(o.tNet)+' SAR','good');
-      showSaved({ref:ref,ids:ids,account:o.account,date:dt,status:st,notes:notes,tQty:o.tQty,tGross:o.tGross,tDisc:o.tDisc,tNet:o.tNet,lines:rowsOut.map(function(r){return {item:r.item,qty:r.qty,ref:r.rsp,pct:r.pct,src:r.src,nu:r.netUnit,nv:r.net};})});
+      showSaved({hist:hf,ref:ref,ids:ids,account:o.account,date:dt,status:st,notes:notes,tQty:o.tQty,tGross:o.tGross,tDisc:o.tDisc,tNet:o.tNet,lines:rowsOut.map(function(r){return {item:r.item,qty:r.qty,ref:r.rsp,pct:r.pct,src:r.src,nu:r.netUnit,nv:r.net};})});
       lines.innerHTML='';addLine();$('obNotes').value='';recalc();
     },function(e){$('btnReq').disabled=false;setMsg(N,'b-bad',esc(errText(e)));});
   });
@@ -996,7 +1013,7 @@ function showSaved(o){
     o.lines.map(function(l){return '<tr><td>'+esc(shortItem(l.item))+'</td><td class="num">'+INT(l.qty)+'</td><td class="num">'+PCT2(l.pct)+'</td><td class="num">'+SAR(l.nu)+'</td><td class="num">'+SAR(l.nv)+'</td></tr>';}).join('')+
     '</tbody><tfoot><tr><td><strong>Total</strong></td><td class="num"><strong>'+INT(o.tQty)+'</strong></td><td></td><td></td><td class="num"><strong>'+SAR(o.tNet)+' SAR</strong></td></tr></tfoot></table></div>'+
     (o.notes?'<div class="note">Note: '+esc(o.notes)+'</div>':'')+
-    v42SavedStock(o)+'<div class="rowbtns" style="margin-top:10px"><button type="button" class="btn" data-sp="pdf">Print / save PDF</button><button type="button" class="btn ghost" data-sp="copy">Copy summary</button><button type="button" class="btn ghost" data-sp="orders">See in Orders</button><button type="button" class="btn ghost" data-sp="close">New order</button></div><div class="note" id="spNote" role="status" aria-live="polite"></div>';
+    v42SavedStock(o)+(o.hist?'<div class="note">'+HIST_NOTE+'</div>':'')+'<div class="rowbtns" style="margin-top:10px"><button type="button" class="btn" data-sp="pdf">Print / save PDF</button><button type="button" class="btn ghost" data-sp="copy">Copy summary</button><button type="button" class="btn ghost" data-sp="orders">See in Orders</button><button type="button" class="btn ghost" data-sp="close">New order</button></div><div class="note" id="spNote" role="status" aria-live="polite"></div>';
   el.hidden=false;try{el.scrollIntoView({block:'start',behavior:'smooth'});}catch(e){}
 }
 $('savedPanel').addEventListener('click',function(e){
@@ -1279,10 +1296,11 @@ function orderEditForm(id){
     html:'<p class="note" style="margin-top:0"><strong>'+esc(o.a)+'</strong> · '+esc(o.it)+'<br>Price kept from the order: RSP '+SAR(r.rsp)+' · discount '+PCT2(r.pct)+' ('+esc(r.src||'')+')</p>'+
       '<div class="grid g-2b">'+fld('eDate','Order date',r.date,{type:'date'})+fld('eQty','Quantity',r.qty,{type:'number',mode:'numeric'})+'</div>'+
       fld('eStatus','Status',r.status,{options:STATUSES})+fld('eNotes','Notes / reference',r.notes,{max:160})+'<div class="note" id="ePrev" aria-live="polite"></div>',
-    onInput:function(md){var q=numIn(fv(md,'eQty'));md.querySelector('#ePrev').innerHTML=(isFinite(q)&&q>0)?'Net after change: <strong>'+SAR(q*r.rsp*(1-r.pct))+' SAR</strong> (was '+SAR(r.net)+')':'';},
+    onInput:function(md){var q=numIn(fv(md,'eQty'));md.querySelector('#ePrev').innerHTML=(isFinite(q)&&q>0)?'Net after change: <strong>'+SAR(Eng.money(q*(r.rsp*(1-r.pct))))+' SAR</strong> (was '+SAR(r.net)+')':'';},
     onOk:function(md){
       var dt=fv(md,'eDate'),q=numIn(fv(md,'eQty')),st=fv(md,'eStatus'),nt=fv(md,'eNotes').slice(0,160);
       if(!validDate(dt))return 'Enter a valid date.';
+      if(q!=null&&isNaN(q))return NUMMSG;
       if(!(Number.isInteger(q)&&q>=1&&q<=1000000))return 'Quantity must be a whole number from 1 to 1,000,000.';
       if(st==='Executed'&&dt>localDate())return 'An executed order cannot be dated in the future.';
       var ch=[];if(dt!==r.date)ch.push(['date',r.date,dt]);if(q!==r.qty)ch.push(['qty',r.qty,q]);if(st!==r.status)ch.push(['status',r.status,st]);if((nt||null)!==(r.notes||null))ch.push(['notes',r.notes||'',nt]);
@@ -1292,13 +1310,21 @@ function orderEditForm(id){
       var aud=ch.map(function(c){return auditRow('EDIT_ORDER',o.a,o.it,c[0],c[1],c[2],'',id+(c[0]==='qty'?' · net '+SAR(r.net)+' → '+SAR(q*r.rsp*(1-r.pct)):'')+(oldP!==newP&&c[0]==='date'?' · moved '+oldP+' → '+newP:''));});
       var steps;
       if(oldP===newP)steps=[{path:oldP,fn:function(b){var row=b.rows.filter(function(x){return x.id===id;})[0];if(!row)throw new Error('Line '+id+' was not found (it may have been changed elsewhere). Nothing was saved.');apply(row);}}];
-      else{var moved=null;
+      else{var moved=null,copied=false;
         steps=[{path:oldP,fn:function(b){var row=b.rows.filter(function(x){return x.id===id;})[0];if(!row)throw new Error('Line '+id+' was not found. Nothing was saved.');moved=apply(JSON.parse(JSON.stringify(row)));}},
-          {path:newP,fn:function(b){if(b.rows.some(function(x){return x.id===id;}))throw new Error('Line '+id+' already exists in '+newP+'.');b.rows.push(moved);}},
-          {path:oldP,fn:function(b){b.rows=b.rows.filter(function(x){return x.id!==id;});}}];
+          {path:newP,fn:function(b){var ex=b.rows.filter(function(x){return x.id===id;})[0];
+            if(ex){ /* a copy left by an earlier attempt that stopped half-way: the same line, same details -> this step is already done */
+              if(['date','account','itemId','qty','rsp','pct','net','status','notes'].every(function(k){return JSON.stringify(ex[k]===undefined?null:ex[k])===JSON.stringify(moved[k]===undefined?null:moved[k]);}))return;
+              throw new Error('Line '+id+' already exists in '+newP+' with different details. Nothing more was changed.');}
+            b.rows.push(moved);}},
+          {path:oldP,fn:function(b){copied=true;b.rows=b.rows.filter(function(x){return x.id!==id;});}}];
         steps[0]={path:oldP,fn:steps[0].fn,readOnly:true};
       }
-      return commitEdit(steps,aud).then(function(){toast('Line '+esc(id)+' updated','good');});
+      return commitEdit(steps,aud).then(function(){toast('Line '+esc(id)+' updated','good');},function(e){
+        if(oldP===newP)throw e;
+        /* the move is 3 writes; if it stopped after the copy was saved, say so plainly (clicking Save changes again finishes it, nothing is duplicated) */
+        if(!copied)throw e;
+        throw new Error('The date change is only half saved: line '+id+' was copied to '+newP+' but could not be removed from '+oldP+', so for now it shows in both months. Click Save changes again to finish it — nothing is lost.');});
     }});
 }
 /* a read-only first step only captures the row (no write); then add-to-new, then remove-from-old (never loses the row) */
@@ -1339,15 +1365,16 @@ function dcShow(){var a=prAccount.value,it=pi.value,cur=$('dcCurrent'),pv=$('dcP
   var net=function(p){return (rsp==null||p==null)?null:rsp*(1-p);};
   cur.innerHTML='RSP '+(rsp!=null?SAR(rsp):'<span class="badge b-review">missing</span>')+
     ' · Standard '+(stdOk?'<strong>'+PCT(im.std)+'</strong> (net '+SAR(net(im.std))+')':'<span class="badge b-review">no standard rate</span>')+
-    ' · Customer deal '+(has?'<strong>'+PCT2(dealMap[key])+'</strong>':'<span class="muted">none (uses standard)</span>')+
+    ' · Customer deal '+(r.src==='Account deal'?'<strong>'+PCT2(r.pct)+'</strong>':r.src==='Standard rule'?'<span class="muted">none eligible today (uses standard)</span>':'<span class="badge b-review">review required</span>')+
     ' · Today: <strong>'+(r.pct==null?'<span class="badge b-review">REVIEW — no rate</span>':PCT2(r.pct)+' → net '+SAR(net(r.pct))+' SAR')+'</strong> ('+esc(r.src||'—')+')';
   var np=null,lab;
   if(de){if(!has){pv.innerHTML='<span class="badge b-review">CHECK</span> No Active deal to retire for this account and item.';return;}np=stdOk?im.std:null;lab='After retiring (standard rule)';}
-  else{var raw=rt.value.trim(),v=parseFloat(raw);if(raw===''||!isFinite(v)||v<0||v>100)return;np=Math.round(v*10000)/10000/100;lab='New rate';}
+  else{var raw=rt.value.trim(),v=numIn(raw);if(raw===''||v==null||!isFinite(v)||v<0||v>100)return;np=Math.round(v*10000)/10000/100;lab='New rate';}
   if(np==null||rsp==null){pv.innerHTML='<span class="badge b-review">CHECK</span> '+lab+': REVIEW — no valid rate/RSP.';return;}
   var d1=(r.pct==null?null:net(np)-net(r.pct));
-  pv.innerHTML='Net per unit: <strong>'+(r.pct==null?'—':SAR(net(r.pct)))+' → '+SAR(net(np))+' SAR</strong> ('+lab+' '+PCT2(np)+(d1==null?'':', '+(d1>=0?'+':'')+SAR(d1)+' per unit')+'). Saved orders keep their prices; new orders use the new rule.';}
-pi.addEventListener('change',dcShow);prAccount.addEventListener('change',dcShow);$('dcRate').addEventListener('input',dcShow);$('dcDeactivate').addEventListener('change',dcShow);
+  pv.innerHTML='Net per unit: <strong>'+(r.pct==null?'—':SAR(net(r.pct)))+' → '+SAR(net(np))+' SAR</strong> ('+lab+' '+PCT2(np)+(d1==null?'':', '+(d1>=0?'+':'')+SAR(d1)+' per unit')+'). Saved orders keep their prices; new orders use the new rule.';
+  var ef=($('dcEff').value||'').trim();if(!de&&validDate(ef)&&ef>localDate())pv.innerHTML+=' <strong>This deal starts on '+esc(v42D(ef))+'.</strong> Until then new orders keep today’s price.';}
+pi.addEventListener('change',dcShow);prAccount.addEventListener('change',dcShow);$('dcRate').addEventListener('input',dcShow);$('dcEff').addEventListener('input',dcShow);$('dcDeactivate').addEventListener('change',dcShow);
 function dealPrefix(acc,rows){
   var own=rows.map(function(r){return (/^([A-Z]+)\d+$/.exec(String(r.id||''))||[])[1];}).filter(Boolean);if(own.length)return own[0];
   var used={};D.deals.forEach(function(d){var m=/^([A-Z]+)\d+$/.exec(String(d.id||''));if(m&&d.acct!==acc.name)used[m[1]]=1;});
@@ -1362,20 +1389,21 @@ $('dcBuild').addEventListener('click',function(){
   var im=itemMap[it];if(!im||typeof im.rsp!=='number'||!isFinite(im.rsp)||im.rsp<=0)return setMsg(N,'b-review','This item has no reference price (RSP), so a deal cannot be priced. Add the RSP on the Items page.');
   var eff=($('dcEff').value||'').trim()||localDate();if(!validDate(eff))return setMsg(N,'b-review','Effective date must be a valid date (or leave it empty for today).');
   var key=a+'␟'+it,has=Object.prototype.hasOwnProperty.call(dealMap,key),old=has?dealMap[key]:null,np=null,today=localDate();
+  if(has&&old!==old){var r0=resolve(a,it);old=r0.src==='Account deal'?r0.pct:null;}   /* a scheduled deal means two Active rows: show the one pricing today */
   if(de&&!has)return setMsg(N,'b-review','Nothing to retire — this account has no Active deal for this item.');
-  if(!de){var v=parseFloat(raw);if(raw===''||!isFinite(v)||v<0||v>100)return setMsg(N,'b-review','Discount must be a number from 0 to 100 (40 means 40%).');np=Math.round(v*10000)/10000/100;
-    if(has&&Math.abs(old-np)<1e-9)return setMsg(N,'b-review','The deal is already '+PCT2(np)+'. Nothing to change.');}
+  if(!de){var v=numIn(raw);if(raw!==''&&v!==null&&isNaN(v))return setMsg(N,'b-review',NUMMSG+' Nothing was saved.');if(raw===''||v==null||!isFinite(v)||v<0||v>100)return setMsg(N,'b-review','Discount must be a number from 0 to 100 (40 means 40%).');np=Math.round(v*10000)/10000/100;
+    if(has&&old!=null&&Math.abs(old-np)<1e-9)return setMsg(N,'b-review','The deal is already '+PCT2(np)+'. Nothing to change.');}
   var newId='';setMsg(N,'','Saving…');$('dcBuild').disabled=true;
   commit([{path:'deals/'+acc.id,fn:function(b){
     var act=b.rows.filter(function(r){return r.itemId===im.id&&r.status==='Active';});
     if(de&&!act.length)throw new Error('This deal was already retired. Nothing was saved.');
-    act.forEach(function(r){r.status='Inactive';r.to=de?today:eff;r.updated=today;});
+    act.forEach(function(r){if(de){r.status='Inactive';r.to=today;}else Pricing.supersede(r,eff,today);r.updated=today;});   /* a deal that starts later leaves the old one pricing until then */
     if(!de){var px=dealPrefix(acc,b.rows),mx=0;b.rows.forEach(function(r){var m=/^([A-Z]+)(\d+)$/.exec(String(r.id||''));if(m&&m[1]===px)mx=Math.max(mx,+m[2]);});
       newId=px+pad(mx+1,3);
       b.rows.push({id:newId,account:acc.name,origItem:im.name,item:im.name,itemId:im.id,pct:np,rsp:im.rsp,net:im.rsp*(1-np),extraPct:null,bonusPct:null,from:eff,to:null,status:'Active',source:'Platform',updated:today,notes:rs||null,type:'Account deal'});}
   }}],[de?auditRow('RETIRE_DEAL',a,it,'status','Active '+PCT2(old),'Inactive (standard rule)',rs,''):auditRow(has?'UPDATE_DEAL':'ADD_DEAL',a,it,'pct',has?PCT2(old):'',PCT2(np),rs,'deal '+newId+' from '+eff)]).then(function(){
     $('dcBuild').disabled=false;$('dcRate').value='';$('dcReason').value='';$('dcDeactivate').checked=false;
-    setMsg(N,'b-good',de?'Deal retired for <strong>'+esc(it)+'</strong>. New orders use the standard rule.':'Deal <span class="mono">'+esc(newId)+'</span> saved: <strong>'+PCT2(np)+'</strong> for '+esc(it)+(has?' (replaces '+PCT2(old)+')':'')+'.');
+    setMsg(N,'b-good',de?'Deal retired for <strong>'+esc(it)+'</strong>. New orders use the standard rule.':'Deal <span class="mono">'+esc(newId)+'</span> saved: <strong>'+PCT2(np)+'</strong> for '+esc(it)+(has?' (replaces '+PCT2(old)+')':'')+(eff>today?'. It starts on <strong>'+esc(v42D(eff))+'</strong>; until then new orders keep the current price.':'.'));
     toast(de?'Deal retired':'Deal saved · '+PCT2(np),'good');dcShow();
   },function(e){$('dcBuild').disabled=false;setMsg(N,'b-bad',esc(errText(e)));});
 });
@@ -1396,6 +1424,7 @@ function itemForm(it){
       var name=fv(md,'fName'),r=numIn(fv(md,'fRsp')),p=numIn(fv(md,'fP26')),m=numIn(fv(md,'fMoh'));
       if(!name)return 'Enter the item name.';
       if(!uniqName(D.items.map(function(x){return x._r;}),name,raw.id))return 'Another item already has this name.';
+      if([r,p,m].some(function(x){return x!=null&&isNaN(x);}))return NUMMSG;
       if(!(r>0))return 'RSP must be a number above 0.';
       if(p!=null&&!(p>=0&&p<=r))return '2026 price must be between 0 and the RSP.';
       if(m!=null&&!(m>=0&&m<100))return 'MOH margin must be a percent from 0 to 99.99.';
@@ -1433,6 +1462,7 @@ function acctForm(a){
       var name=fv(md,'aName'),t=numIn(fv(md,'aTarget'));
       if(!name)return 'Enter the account name.';
       if(!uniqName(D.accounts.map(function(x){return x._r;}),name,raw.id))return 'Another account already has this name.';
+      if(t!=null&&isNaN(t))return NUMMSG;
       if(t!=null&&!(t>=0))return 'Target must be a number (or empty).';
       var vals={name:name,type:fv(md,'aType'),territory:fv(md,'aTerr')||null,contact:fv(md,'aContact')||null,target:t,aliases:fv(md,'aAliases')||null,notes:fv(md,'aNotes')||null};
       if(!isNew)vals.active=fv(md,'aActive');
@@ -1467,7 +1497,7 @@ function dataCheck(){
   var netOk=Math.abs(net-M.execNetAll)<=0.005&&lines===D.orders.length; /* V42: compare with ALL executed lines, not the scoped dashboard total */
   var checks=[['Executed net = sum of saved lines',netOk,SAR(net)+' SAR'],['Line maths (qty × price × (1 − disc))',arith===0,arith+' mismatch(es)'],
     ['Unknown account references',unkA.length===0,unkA.length+(unkA.length?' · '+unkA.slice(0,5).join(', '):'')],['Unknown item references',unkI.length===0,unkI.length+(unkI.length?' · '+unkI.slice(0,5).join(', '):'')],
-    ['Duplicate IDs',dupIds.length===0,dupIds.length+(dupIds.length?' · '+dupIds.slice(0,5).join(', '):'')],['Lines filed under the wrong month',wrong===0,String(wrong)],['Two Active deals for one item',multiAct===0,String(multiAct)]];
+    ['Duplicate IDs',dupIds.length===0,dupIds.length+(dupIds.length?' · '+dupIds.slice(0,5).join(', '):'')],['Lines filed under the wrong month',wrong===0,String(wrong)],['Additional Active deals (advisory)',true,String(multiAct)+' · newest eligible deal used; invalid rates still require review']];
   return {ok:checks.every(function(c){return c[1];}),checks:checks,net:net,lines:lines,qty:qty};
 }
 function lastChange(){var m='';var docs=Store.all();Object.keys(docs).forEach(function(p){var u=docs[p]&&docs[p].updatedAt;if(u&&u>m)m=u;});return m;}
@@ -1770,7 +1800,9 @@ function v42Err(title,e){if(window.console)console.error(e);return '<div class="
 function v42Block(){var m=Store.status().mode;if(m==='db'||m==='local')return '';
   return m==='starting'?'Still connecting to the database. Wait a moment and try again. Nothing was saved.':m==='empty'?'The database is empty, so saving is switched off. Load the Excel snapshot first (see the banner at the top). Nothing was saved.':'Saving is not available right now. Nothing was saved.';}
 /* restore and the new-workspace wizard may write while the database is still empty (Store.restoreDoc); everything else needs db/local */
-function v42BlockRestore(){var m=Store.status().mode;if(m==='db'||m==='local'||m==='empty')return '';return 'Still connecting to the database. Wait a moment and try again. Nothing was saved.';}
+function v42BlockRestore(){var m=Store.status().mode,lb=v44LoadBlock('restoring');if(lb)return lb+' Nothing was saved.';if(m==='db'||m==='local'||m==='empty')return '';return 'Still connecting to the database. Wait a moment and try again. Nothing was saved.';}
+/* a collection whose listener failed is missing from the page's copy: saving then could reuse ids or hide rows, so order saves/imports and Restore wait for a reload */
+function v44LoadBlock(what){var f=Store.status().failed||[];return f.length?'Some data did not load. Reload the page before '+(what||'saving')+', so nothing is saved twice.':'';}
 function v42Today(){return localDate();}
 /* actual net of one month over OPEN accounts, whatever period the dashboard is set to */
 function v42MonthNetAll(ym){var n=0;D.orders.forEach(function(o){if(o.s!=='Executed'||String(o.d||'').slice(0,7)!==ym)return;var a=acctMap[o.a];if(a&&!a.active)return;n+=o.net||0;});return n;}
@@ -1820,7 +1852,9 @@ function v42ApplyBrand(){
 
 /* ---------- derive helpers (called from the patched derive / renderKpis / acctRankedList) ---------- */
 function v42OpenAcctN(){return D.accounts.filter(function(a){return a.active;}).length;}
-function v42NetLabel(){return V42.period==='all'?'YTD Net Sales (SAR)':'Net Sales '+V42.period+' (SAR)';}
+/* what the period selector is set to, in words: only the CURRENT year is "year to date" */
+function v44PeriodWord(){var p=V42.period;return p==='all'?'all periods':(p===localDate().slice(0,4)?p+' year to date':p);}
+function v42NetLabel(){return 'Net sales · '+v44PeriodWord()+' (SAR)';}
 function v42ClosedNet(name){var net=0,qty=0;D.orders.forEach(function(o){if(o.a===name&&o.s==='Executed'&&v42InPeriod(o.d)){net+=o.net||0;qty+=+o.q||0;}});return {net:net,qty:qty};}
 function v42Years(){var y={};D.orders.forEach(function(o){if(o.d)y[String(o.d).slice(0,4)]=1;});return Object.keys(y).sort().reverse();}
 function v42FillPeriod(){
@@ -1899,7 +1933,7 @@ function renderToday(){
            :v42Tile('tdMonth','This month · '+MON[+cm.slice(5,7)-1]+' '+cm.slice(0,4),K(v42MonthNetAll(cm))+' SAR','No target set · <a href="#" data-tdgo="targets">set one</a>'),
       v42Tile('tdPipe','Open orders (pipeline)',K(pipe.net||0)+' SAR',INT(pipe.groups.length)+' order'+(pipe.groups.length===1?'':'s')+' · '+INT(pipe.qty)+' unit'+(pipe.qty===1?'':'s')+' · pending or quoted'),
       v42Tile('tdDue','Reorders due',INT(Object.keys(dAcc).length)+' account'+(Object.keys(dAcc).length===1?'':'s'),INT(due.length)+' item'+(due.length===1?'':'s')+' · about '+K(dVal)+' SAR'),
-      !v44On()?'':sm.tracked?v42Tile('tdStk','Stock alerts',INT(attn)+' item'+(attn===1?'':'s'),INT(sm.out||0)+' out · '+INT(sm.short||0)+' short · '+INT(sm.low||0)+' low'+(sm.negative?' · '+sm.negative+' to recount':''),attn?'k-warn':'')
+      !v44On()?osTodayTile():sm.tracked?v42Tile('tdStk','Stock alerts',INT(attn)+' item'+(attn===1?'':'s'),INT(sm.out||0)+' out · '+INT(sm.short||0)+' short · '+INT(sm.low||0)+' low'+(sm.negative?' · '+sm.negative+' to recount':''),attn?'k-warn':'')
                :v42Tile('tdStk','Stock alerts','Not set up','<a href="#" data-tdgo="setup">Start tracking stock</a>')
     ];
     var h='<div class="kpis">'+tiles.join('')+'</div>';
@@ -1924,9 +1958,9 @@ function renderToday(){
     h+='</div>';
     var lap=v42LapsedN();
     if(lap){
-      h+='<div class="card" style="margin-top:14px"><h3>Lapsed (win back): '+lap+' <span class="tag">overdue by more than 45 days and by more than their usual interval</span></h3>'+
+      h+='<div class="card" style="margin-top:14px"><h3>Stopped ordering (win back): '+lap+' <span class="tag">overdue by more than 45 days and by more than their usual interval</span></h3>'+
         '<p class="muted" style="margin:0 0 8px;font-size:13px">These are not counted as due and never go into a draft order. Use them as a follow-up list: has the account stopped buying this item?</p>'+
-        '<button type="button" class="btn ghost sm" data-tdlapsed="1" aria-expanded="'+(!!V42.showLapsed)+'">'+(V42.showLapsed?'Hide the list':'Show the '+lap+' lapsed item'+(lap===1?'':'s'))+'</button>';
+        '<button type="button" class="btn ghost sm" data-tdlapsed="1" aria-expanded="'+(!!V42.showLapsed)+'">'+(V42.showLapsed?'Hide the list':'Show the '+lap+' item'+(lap===1?'':'s'))+'</button>';
       if(V42.showLapsed){
         var lr=v42LapsedRows().slice().sort(function(a,b){return String(a.account).localeCompare(String(b.account))||(a.lastDate<b.lastDate?1:a.lastDate>b.lastDate?-1:0)||String(a.item).localeCompare(String(b.item));});
         h+='<div class="scroll" style="max-height:420px;margin-top:10px"><table><thead><tr><th>Account</th><th>Item</th><th>Last order</th><th class="num">Usual qty</th><th class="num">Days since due</th></tr></thead><tbody>'+
@@ -2252,6 +2286,7 @@ function v42TgLoadSaved(){ /* put the saved target's settings into the controls 
 function v42TgWtxt(){var w=+$('tgW').value;$('tgWTxt').textContent=w+'% history · '+(100-w)+'% potential';}
 function v42TgOpts(){
   var T=V42.tg,tot=numIn($('tgTotal').value);
+  if(tot!=null&&isNaN(tot))return {error:NUMMSG};
   if(tot==null||!isFinite(tot)||!(tot>0))return {error:'Enter the total target in SAR (a number above 0).'};
   return {month:T.month,total:Math.round(tot*100)/100,histWeight:(+$('tgW').value)/100,histMonths:+$('tgHM').value,acctGrowth:T.ag,itemGrowth:T.ig,acctFixed:T.fx};
 }
@@ -2466,14 +2501,14 @@ function v42SafetyBackup(){
 }
 function v42RestoreRender(){
   var Q=function(id){return V42.nodes['restore']?V42.nodes['restore'].querySelector('#'+id):null;},n=v42Node('restore'),R=V42.rs;n._r=1;
-  var h='<h3>Restore from backup</h3><p class="note" style="margin-top:0">Pick a file made by “Download backup”. You will see exactly what would change before anything is written. Nothing is deleted. Records that exist now but not in the file are left as they are, except extra order and stock pages for months the file also has (made by big imports): those are emptied, and kept, so the months match the file.</p>'+
+  var h='<h3>Restore from backup</h3><p class="note" style="margin-top:0">Pick a file made by “Download backup”. You will see exactly what would change before anything is written. Nothing is deleted. Records that exist now but not in the file are left as they are, except extra pages for months the file also has (made by big imports): those are emptied, and kept, so the months match the file.</p>'+
     '<div class="field"><label for="rsFile">Backup file (.json)</label><input type="file" id="rsFile" accept=".json,application/json"></div>';
   if(R.err)h+='<div class="banner bad" role="alert">'+esc(R.err)+'</div>';
-  if(R.diff){var d=R.diff,more=d.after.lines<d.before.lines||d.after.net<d.before.net-0.005;
+  if(R.diff){var d=R.diff,rc=d.records||{changed:0,added:0,removed:0},more=d.after.lines<d.before.lines||d.after.net<d.before.net-0.005||rc.changed>0||rc.removed>0;
     h+='<p><strong>'+esc(R.name)+'</strong></p><div class="kpis" style="margin-bottom:10px"><div class="kpi"><div class="k-label">New records</div><div class="k-val sm">'+INT(d.add.length)+'</div><div class="k-sub">documents added</div></div><div class="kpi"><div class="k-label">Changed</div><div class="k-val sm">'+INT(d.change.length)+'</div><div class="k-sub">documents replaced by the file’s version</div></div><div class="kpi"><div class="k-label">Same</div><div class="k-val sm">'+INT(d.same.length)+'</div><div class="k-sub">no change</div></div><div class="kpi"><div class="k-label">Only here</div><div class="k-val sm">'+INT(d.onlyCurrent.length)+'</div><div class="k-sub">kept untouched</div></div></div>'+
       '<div class="scroll"><table><thead><tr><th></th><th class="num">Order lines</th><th class="num">Executed net (SAR)</th></tr></thead><tbody><tr><td>Now</td><td class="num">'+INT(d.before.lines)+'</td><td class="num">'+SAR(d.before.net)+'</td></tr><tr><td><strong>After restore</strong></td><td class="num">'+INT(d.after.lines)+'</td><td class="num"><strong>'+SAR(d.after.net)+'</strong></td></tr></tbody></table></div>'+
       ((d.empty||[]).length?'<div class="banner warn" role="status" style="margin-top:10px"><strong>Also emptied:</strong> '+INT(d.empty.length)+' extra page'+(d.empty.length===1?'':'s')+' ('+INT(d.emptyRows)+' line'+(d.emptyRows===1?'':'s')+') that are not in this file: '+d.empty.slice(0,6).map(esc).join(', ')+(d.empty.length>6?' …':'')+'. The pages stay but lose their lines, as the file has none there.</div>':'')+
-      (more?'<div class="banner warn" role="status" style="margin-top:10px"><strong>Heads up:</strong> this file has fewer order lines or less executed net than your current data. Documents it changes will be replaced by the older version.</div>':'')+
+      (more?'<div class="banner warn" role="status" style="margin-top:10px"><strong>Heads up:</strong> restoring will undo newer work. <strong>'+INT(rc.changed)+' record'+(rc.changed===1?'':'s')+'</strong> (order lines, deals, items ...) go back to the file’s version (edits or cancellations are reverted)'+(rc.removed?', <strong>'+INT(rc.removed)+'</strong> that exist now are taken out':'')+(rc.added?', <strong>'+INT(rc.added)+'</strong> come back':'')+'. Order lines '+INT(d.before.lines)+' → '+INT(d.after.lines)+', executed net '+SAR(d.before.net)+' → '+SAR(d.after.net)+'. History is never removed: newer history rows are kept.</div>':'')+
       ((d.add.length||d.change.length||(d.empty||[]).length)?'<details style="margin-top:10px"><summary>Documents that will be written ('+(d.add.length+d.change.length)+')</summary><ul class="ap-att">'+d.add.slice(0,60).map(function(p){return '<li>'+esc(p)+' — new</li>';}).join('')+d.change.slice(0,60).map(function(p){return '<li>'+esc(p)+' — replaced</li>';}).join('')+'</ul></details>':'<p class="muted">Nothing to restore — the file matches your data.</p>')+
       ((d.add.length||d.change.length||(d.empty||[]).length)?'<div class="field" style="margin-top:12px;max-width:320px"><label for="rsType">Type RESTORE to confirm</label><input id="rsType" autocomplete="off" value="'+esc(R.typed)+'"></div><div class="rowbtns"><button type="button" class="btn danger" id="rsGo"'+(R.typed==='RESTORE'&&!R.busy?'':' disabled')+'>Restore now</button></div><div class="note">First, a safety copy of your current data is downloaded. Then documents are written one by one, and the change is logged in the history.</div>':'');}
   h+='<div class="note" id="rsMsg" role="status" aria-live="polite">'+(R.msg||'')+'</div>';
@@ -2489,7 +2524,7 @@ function v42RestoreRender(){
 function v42DoRestore(){
   var R=V42.rs;if(R.busy||R.typed!=='RESTORE'||!R.docs||!R.diff)return;
   var blk=v42BlockRestore();if(blk){R.msg='<span class="badge b-bad">Not restored</span> '+esc(blk);v42RestoreRender();return;}
-  var wasEmpty=Store.status().mode==='empty';
+  var wasEmpty=Store.status().mode==='empty'&&!(Store.status().failed||[]).length;   /* a database that failed to load is not an empty one */
   R.busy=true;var go=v42Node('restore').querySelector('#rsGo');if(go)go.disabled=true;
   function say(t,k){R.msg=(k?'<span class="badge '+k+'">'+(k==='b-good'?'Done':k==='b-bad'?'Stopped':'Working')+'</span> ':'')+t;var m=v42Node('restore').querySelector('#rsMsg');if(m)m.innerHTML=R.msg;}
   var d=R.diff,paths=d.add.concat(d.change).filter(function(p){return p!=='master/settings';});if(d.add.concat(d.change).indexOf('master/settings')>=0)paths.push('master/settings');
@@ -2497,7 +2532,9 @@ function v42DoRestore(){
   (wasEmpty?Promise.resolve(true):v42SafetyBackup()).then(function(ok){
     if(!ok){R.busy=false;say('Restore cancelled — no safety copy was saved, so nothing was changed.','b-bad');v42RestoreRender();return;}
     var i=0,done=0;
-    function putOne(p,retry){return Store.get(p).then(function(cur){return Store.restoreDoc(p,v42Clone(R.docs[p]),cur?(cur.updatedAt||''):null);})['catch'](function(e){if(e&&e.code==='conflict'&&!retry)return putOne(p,true);throw e;});}
+    function putOne(p,retry){return Store.get(p).then(function(cur){var body=v42Clone(R.docs[p]);
+      if(/^audit\//.test(p)&&cur){body=Eng.mergeAudit(cur,body);if(body.rows.length===(cur.rows||[]).length)return;}   /* history: keep the rows written after the backup; nothing new to add = no write */
+      return Store.restoreDoc(p,body,cur?(cur.updatedAt||''):null);})['catch'](function(e){if(e&&e.code==='conflict'&&!retry)return putOne(p,true);throw e;});}
     function next(){if(i>=paths.length)return Promise.resolve();var p=paths[i++];say('Restoring '+i+' of '+paths.length+' — '+esc(p),'b-review');return putOne(p).then(function(){done++;return next();});}
     var ej=0,eps=(d.empty||[]).slice();
     function emptyNext(){if(ej>=eps.length)return Promise.resolve();var p=eps[ej++];say('Emptying extra page '+ej+' of '+eps.length+' — '+esc(p),'b-review');
@@ -2593,7 +2630,7 @@ function v43Restore(k){if(!k)return;var el=$('stockBody'),t=null;if(!el)return;
 function v43RenderStock(){
   var el=$('stockBody');if(!el)return;
   if(!v42Ok()){el.innerHTML='<div class="card"><p class="muted">The planning engine did not load. Reload the page.</p></div>';return;}
-  v44StockTag();if(!v44On()){v44RenderStock();return;}
+  v44StockTag();if(!v44On()){osRender();return;}
   var S=V42.st;if(S.tab==='setup'&&S.dirty&&el.querySelector('#suList'))return; /* keep what is being typed in the V42 grid */
   var keep=v43Focus();
   if(S.tab==='own'&&el.getAttribute('data-sk')==='own'&&$('skList')&&$('skFilter')){ /* same screen: refresh the parts, keep #skMsg, the counters and the bar as the same nodes */
@@ -2795,7 +2832,8 @@ window.addEventListener('beforeunload',function(e){if(v43Dirty()||V43I.running){
 var V44={acct:'',wired:false,tag:null};
 var V44_PST={lapsed:['b-bad','Lapsed'],overdue:['b-bad','Overdue'],due:['b-review','Due'],soon:['b-std','Soon'],later:['b-off','Later']};
 function v44StockTag(){var t=document.querySelector('#view-stock .h-row .tag');if(!t)return;if(V44.tag==null)V44.tag=t.textContent;
-  t.textContent=v44On()?V44.tag:'worked out from each customer’s orders';v44SeBar();}
+  t.textContent=v44On()?V44.tag:'worked out from each customer’s orders';
+  var heading=document.querySelector('#view-stock .h-row h2');if(heading)heading.textContent=v44On()?'What is on the shelf':'Stock (from your orders)';v44SeBar();}
 /* The owner's switch for stock entry: one bar above the Stock screen, a details dialog, one settings write + one audit row. */
 function v44SeBar(){
   var body=$('stockBody');if(!body)return;var bar=$('seBar');
@@ -2806,7 +2844,7 @@ function v44SeBar(){
     '<button type="button" class="btn ghost sm" id="seBtn"><span aria-hidden="true" class="se-i">i</span> Stock entry settings</button>';
 }
 function v44SeDialog(){
-  var on=v44On(),next=!on;
+  var on=v44On(),next=!on,settingsSaved=false,historySaved=false,historyRow=null,historyPath=null;
   var html=on?
     '<p>Stock entry is <strong>switched on</strong>. You can type counts, receive deliveries, adjust stock and import stock counts.</p>'+
     '<p>Turning it off hides all of that again. Customers’ stock and expected orders keep working from orders. Nothing is deleted: counts you already saved stay, and come back if you turn entry on again.</p>':
@@ -2814,8 +2852,18 @@ function v44SeDialog(){
     '<p>Turning it on adds: count boxes for your own stock, Receive delivery, Adjust and Count, the Stock counts type in Import Excel, the stock tile and stock alerts on Today, and stock hints in New order.</p>'+
     '<p>Nothing is deleted either way, and you can switch back at any time here.</p>';
   openDialog({title:'Stock entry',html:html,ok:on?'Turn stock entry off':'Turn stock entry on',onOk:function(){
-    return v42PutDoc('master/settings',function(b){b.stockEntry=next;}).then(function(){
-      return v42Audit([auditRow('SETTINGS','','','stockEntry',String(on),String(next),'Owner switched stock entry '+(next?'on':'off'))]);
+    var save=settingsSaved?Promise.resolve():v42PutDoc('master/settings',function(b){b.stockEntry=next;}).then(function(){settingsSaved=true;});
+    return save.then(function(){
+      if(historySaved)return;
+      if(!historyRow){historyRow=auditRow('SETTINGS','','','stockEntry',String(on),String(next),'Owner switched stock entry '+(next?'on':'off'));historyPath=auditPath();}
+      return mutate(historyPath,function(b){
+        var key=JSON.stringify(historyRow);
+        if(!b.rows.some(function(row){return JSON.stringify(row)===key;}))b.rows.push(historyRow);
+      }).then(function(){historySaved=true;},function(e){
+        var retry=$('mdOk');if(retry)retry.textContent='Retry saving history';
+        var bd=document.querySelector('#dlgHost .md-body');if(bd)bd.innerHTML='<p>Stock entry is now <strong>'+(next?'on':'off')+'</strong>. Only its history entry still has to be saved.</p>';
+        throw new Error('Stock entry is now '+(next?'on':'off')+', but its history could not be saved. Retry saving history; the setting will not be changed again. '+errText(e));
+      });
     }).then(function(){toast('Stock entry switched '+(next?'on':'off'),'good');});
   }});
 }
@@ -2898,7 +2946,7 @@ function v43IOpts(type,scope,def,ctx){
   var o={today:localDate(),eng:Eng};ctx=ctx||v43ICtx();
   if(type==='stock'||type==='orders'||type==='deals')o.matchItem=function(t){return v43IMatch(t,ctx);};
   if(type==='stock'&&scope&&scope!=='own'&&scope!=='*')o.account=scope;
-  if(type==='orders'){o.price=function(a,i){return resolve(a,i);};if(def)o.defaultStatus=def;}
+  if(type==='orders'){o.price=function(a,i,day){return resolve(a,i,day);};if(def)o.defaultStatus=def;}
   if(type==='items'||type==='deals')o.deals=D.deals.map(function(d){return d._r;});   /* every deals/<ACC> row; only Active ones count as current */
   return o;}
 
@@ -2993,7 +3041,7 @@ function v43IWhat(r){
     return h;}
   if(t==='deals'){
     old=r.changes&&r.changes[0]?r.changes[0].old:null;
-    if(st==='update')return 'Discount '+v43IPct(old)+' → '+v43IPct(d.pct)+' from '+esc(v42D(d.from))+' <span class="imp-sub">· the old deal is retired</span>';
+    if(st==='update')return 'Discount '+v43IPct(old)+' → '+v43IPct(d.pct)+' from '+esc(v42D(d.from))+' <span class="imp-sub">· '+(d.from>v42Today()?'the old deal keeps pricing until then':'the old deal is retired')+'</span>';
     if(st==='new')return 'New deal '+v43IPct(d.pct)+' from '+esc(v42D(d.from))+' <span class="imp-sub">· net '+SAR(d.net)+' SAR</span>';
     return 'Already '+v43IPct(d.pct)+' — no change';}
   if(t==='items'){if(st==='same')return 'Already up to date — no change';return v43IItemWords(r);}
@@ -3127,7 +3175,7 @@ function v43IRenderPreview(){
   v43IUpdateTotals();}
 function v43IUpdateTotals(){
   var tk=v43ITickedRows(),t=V43I.type,q=0,net=0,i,go=$('impGo'),tx;
-  for(i=0;i<tk.length;i++){if(t==='orders'){q+=tk[i].data.qty;net+=tk[i].data.netExact;}}
+  for(i=0;i<tk.length;i++){if(t==='orders'){q+=tk[i].data.qty;net+=tk[i].data.net;}}
   tx=t==='orders'?'Ticked: '+INT(tk.length)+(tk.length===1?' line':' lines')+' · '+INT(q)+' units · net '+SAR(net)+' SAR':'Ticked: '+INT(tk.length)+(tk.length===1?' row':' rows');
   $('impTotals').textContent=tx;
   go.textContent=tk.length?'Import '+INT(tk.length)+(tk.length===1?' row':' rows'):'Nothing to import';
@@ -3138,7 +3186,7 @@ function v43IKinds(rows){
   var t=V43I.type,o={n:rows.length,dups:0,same:0,months:{},st:{},net:0,upd:0,nw:0,open:0,count:0},i,r;
   for(i=0;i<rows.length;i++){r=rows[i];
     if(r.status==='duplicate')o.dups++;if(r.status==='same')o.same++;
-    if(t==='orders'){o.months[r.data.date.slice(0,7)]=1;o.st[r.data.status]=(o.st[r.data.status]||0)+1;o.net+=r.data.netExact;}
+    if(t==='orders'){o.months[r.data.date.slice(0,7)]=1;o.st[r.data.status]=(o.st[r.data.status]||0)+1;o.net+=r.data.net;}
     if(t==='stock'){if(r.data.type==='OPEN')o.open++;else o.count++;}
     if(t==='items'||t==='deals'){if(r.status==='new')o.nw++;else o.upd++;}}
   return o;}
@@ -3148,14 +3196,14 @@ function v43IConfirmHtml(rows){
     li.push(Object.keys(o.st).map(function(k){return INT(o.st[k])+' '+esc(k);}).join(', ')+' · net '+SAR(o.net)+' SAR');}
   else if(t==='stock'){li.push('<strong>'+INT(o.n)+'</strong> stock number'+(o.n===1?'':'s')+' ('+INT(o.open)+' start tracking, '+INT(o.count)+' new count'+(o.count===1?'':'s')+')');}
   else if(t==='items'){li.push('<strong>'+INT(o.upd)+'</strong> item'+(o.upd===1?'':'s')+' updated, <strong>'+INT(o.nw)+'</strong> new item'+(o.nw===1?'':'s')+' added');}
-  else{li.push('<strong>'+INT(o.upd)+'</strong> deal'+(o.upd===1?'':'s')+' changed (the old deal is retired), <strong>'+INT(o.nw)+'</strong> new deal'+(o.nw===1?'':'s'));}
+  else{li.push('<strong>'+INT(o.upd)+'</strong> deal'+(o.upd===1?'':'s')+' changed (the old deal ends when the new one starts), <strong>'+INT(o.nw)+'</strong> new deal'+(o.nw===1?'':'s'));}
   if(o.dups)li.push('<strong>'+INT(o.dups)+'</strong> of them look like '+(t==='orders'?'orders you already saved':'rows you already have')+' — you ticked them on purpose');
   if(o.same&&t==='stock')li.push(INT(o.same)+' customer count'+(o.same===1?'':'s')+' equal to the estimate (recorded as a count)');
   return '<p>You are about to save:</p><ul class="imp-conf">'+li.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><p class="note">Nothing is deleted. Every change is also written to the history.</p>';}
 function v43IGo(){
   var blk,plan,i,r,was={},fresh,changed=[],rows;
   if(V43I.running||V43I.confirming||!V43I.plan)return;
-  blk=v42Block();if(blk){v43IMsg('impMsg','bad',esc(blk));return;}
+  blk=v43IBlockMsg();if(blk){v43IMsg('impMsg','bad',esc(blk));return;}
   rows=v43ITickedRows();if(!rows.length)return;
   for(i=0;i<rows.length;i++)was[rows[i].n]=rows[i].status;
   try{plan=v43IBuildPlan();}catch(e){v43IMsg('impMsg','bad',esc((e&&e.message)||'Could not check the rows again. Nothing was saved.'));return;}
@@ -3186,7 +3234,7 @@ function v43ISafety(){
     return confirmBox('No safety copy was saved','<p>This import adds many rows. A copy of your current data could not be saved first, so the import could not be undone with Restore.</p><p><strong>Continue without a safety copy?</strong></p>','Continue without a copy',true).then(function(c){return !!c;});});}
 function v43IRun(rows){
   var run={type:V43I.type,file:V43I.name,plan:V43I.plan,map:V43I.map,sheets:V43I.sheets,sheet:V43I.sheet},p;
-  var blk=v42Block();if(blk){v43IMsg('impMsg','bad',esc(blk));v43IUpdateTotals();return;}
+  var blk=v43IBlockMsg();if(blk){v43IMsg('impMsg','bad',esc(blk));v43IUpdateTotals();return;}
   V43I.running=true;v43ILock(true);V43I_RES=null;
   v43IMsg('impMsg','',rows.length>=V43I_SAFE?'First, saving a safety copy of your current data… (a big import)':'Saving… please wait. Do not close this page.');
   /* an import of 100 rows or more first downloads a copy of the current data (the same file Restore makes), so it can be undone */
@@ -3258,7 +3306,7 @@ function v43IPlain(r){var d=document.createElement('div');if(r.status==='problem
 /* ---------- writers: every one goes through commit / mutate / v42WriteMoves ---------- */
 var V43I_RES=null;                                  /* the result the running writer is filling in, so an exception can still say what was saved */
 function v43INewRes(){V43I_RES={saved:0,ok:[],failed:[],warn:''};return V43I_RES;}
-function v43IBlockMsg(){return v42Block();}
+function v43IBlockMsg(){var b=v42Block();if(b)return b;b=v44LoadBlock();return b?b+' Nothing was saved.':'';}
 /* history rows go in small batches so one audit doc never grows by more than a few hundred rows at once */
 function v43IAudit(rows){
   var chunks=[],i,seq=Promise.resolve(''),warn='';
@@ -3309,6 +3357,7 @@ function v43OrdPieces(ym,list){
     if(take.length){out.push({path:p,rows:take,from:list.length-left.length-take.length});}}
   return out;}
 function v43IMaxTx(b,extra){
+  var lb=v44LoadBlock();if(lb)throw new Error(lb+' Nothing was saved.');
   var mx=0,docs=Store.all();
   Object.keys(docs).forEach(function(p){if(p.split('/')[0]==='orders')rowsOf(docs[p]).forEach(function(o){mx=Math.max(mx,idNum(o.id));});});
   b.rows.forEach(function(o){mx=Math.max(mx,idNum(o.id));});
@@ -3369,7 +3418,7 @@ function v43IWriteDeals(rows,file){
     return commit([{path:'deals/'+acc.id,fn:function(b){
       audit=[];
       g.rows.forEach(function(r){var im=r.item,d=r.data,act=b.rows.filter(function(x){return x.itemId===im.id&&x.status==='Active';}),px,mx=0,newId,old=act.length?act[act.length-1].pct:null;
-        act.forEach(function(x){x.status='Inactive';x.to=d.from;x.updated=today;});   /* the old deal is kept, not deleted */
+        act.forEach(function(x){Pricing.supersede(x,d.from,today);x.updated=today;});   /* the old deal is kept, not deleted; if the new one starts later the old one keeps pricing until the day before */
         px=dealPrefix(acc,b.rows);b.rows.forEach(function(x){var m=/^([A-Z]+)(\d+)$/.exec(String(x.id||''));if(m&&m[1]===px)mx=Math.max(mx,+m[2]);});
         newId=px+pad(mx+1,3);
         b.rows.push({id:newId,account:acc.name,origItem:im.name,item:im.name,itemId:im.id,pct:d.pct,rsp:im.rsp,net:im.rsp*(1-d.pct),extraPct:null,bonusPct:null,from:d.from,to:null,status:'Active',source:'Excel import '+file,updated:today,notes:d.notes||null,type:'Account deal'});
@@ -3447,13 +3496,13 @@ var V43G_SECS=[
   ['Stock',[['stock','Stock','What you have and what is left. Type a count, press Save.'],['import','Import Excel','Bring in stock, orders, items or deals from a spreadsheet. You see what will happen first.']]],
   ['Customers & prices',[['accounts','Accounts','Your customers. Close one that stopped ordering (its history stays).'],['pricing','Pricing','The deal each customer has for each item.'],['items','Items','Your product list with the RSP and the standard discount.']]],
   ['Reports & data',[['dashboard','Dashboard','Sales so far: by customer, item and month.'],['targets','Targets','Set a monthly target and see how it splits between customers.'],['data','Data','Excel export, backup and restore, company name and colour, data checks.'],['guide','How it works','This page.']]]];
-var V44G_SECS=V43G_SECS.map(function(s){return s[0]!=='Stock'?s:['Stock',[['stock','Stock','What each customer probably has left, worked out from their orders. Nothing to type.'],['import','Import Excel','Bring in orders, items or deals from a spreadsheet. You see what will happen first.']]];});
+var V44G_SECS=V43G_SECS.map(function(s){return s[0]!=='Stock'?s:['Stock',[['stock','Stock','What to prepare in the next 30 days, and what each customer probably has left. Worked out from your orders; nothing to type.'],['import','Import Excel','Bring in orders, items or deals from a spreadsheet. You see what will happen first.']]];});
 var V43G_TYPES=[['stock','Stock counts','A count of what is on a shelf: yours, or a customer’s.'],['orders','Orders','Order lines to add to the Orders page.'],['items','Items & prices','New items, or changes to the RSP, price, discount and details of the ones you have.'],['deals','Deals','A discount for one customer on one item.']];
 var V43G_NOTE={
   stock:'The Account column is only needed when the file lists customers’ stock (choose “Customers’ stock” in step 1). A row with no quantity is left out.',
   orders:'One row is one order line. Status is Executed, Pending or Quoted; if the cell is blank the choice you make in step 1 is used. A blank discount means the customer’s usual price.',
   items:'Give the ID or the Name so I know which item the row is about. A name I do not know is added as a new item. A blank cell keeps what the item has now.',
-  deals:'The discount starts on the From date (blank means today). The old deal for that item is retired, not deleted.'};
+  deals:'The discount starts on the From date (blank means today). The old deal for that item ends when the new one starts (kept as history, not deleted); a deal that starts in the future leaves the old price in force until then.'};
 /* what a blank cell does, per kind of file (the outcome word is checked against Imp.plan by the tests: skip / problem / keep / ok) */
 var V43G_BLANK=[
   ['stock.qty','','skip','Stock, quantity','the row is left out (it is not an error and nothing is set to 0)'],
@@ -3518,7 +3567,7 @@ function v43GBody(){
     '<li><strong>Open '+go('today','Today')+'</strong> to see what needs you now.</li>'+
     (on?'<li><strong>Act on the alerts.</strong> Every alert has a button: draft an order, receive stock, count, open the page.</li>':'<li><strong>Act on the alerts.</strong> Every alert has a button: draft an order, open the page, download a backup.</li>')+
     '<li><strong>Enter your orders</strong> in '+go('order','New order')+', or bring many at once with '+go('import','Import Excel')+'.</li>'+
-    (on?'<li><strong>Update '+go('stock','Stock')+' when you count.</strong> Type what you counted and press Save.</li>':'<li><strong>Check '+go('stock','Stock')+'</strong> to see what each customer probably has left, worked out from their orders.</li>')+
+    (on?'<li><strong>Update '+go('stock','Stock')+' when you count.</strong> Type what you counted and press Save.</li>':'<li><strong>Check '+go('stock','Stock')+'</strong> to see what to prepare and what each customer probably has left, worked out from their orders.</li>')+
     '<li><strong>Download a backup once a week</strong> from '+go('data','Data')+'. Today reminds you after 7 days.</li></ol></div>';
   h+='<div class="card gd-card">'+H('What each section does')+'<div class="gd-secs">';
   for(i=0;i<secs.length;i++){s=secs[i];h+='<div class="gd-sec"><h4>'+esc(s[0])+'</h4><ul>';
@@ -3529,12 +3578,23 @@ function v43GBody(){
     (on?'<div class="gd-num"><h4>Stock</h4><p><strong>You have</strong> = your last count + stock you received (and corrections you typed) − the orders you saved as Executed after that count.</p>'+
     '<p><strong>Left</strong> = You have − <strong>On order (reserved)</strong>: the orders still waiting (Pending, and Quoted unless you switch that off in Set up &amp; settings).</p>'+
     '<p class="note">An item you never counted shows “Not tracked”, never 0. Orders saved before you started counting are not taken off.</p></div>'
-    :'<div class="gd-num"><h4>Stock</h4><p>Stock is <strong>worked out from orders</strong>, never typed in. For each customer and item I take the <strong>last order</strong> and the <strong>usual gap</strong> between orders: the customer is taken to use that quantity evenly over the gap, so <strong>Est. left now</strong> goes down day by day and it <strong>runs out</strong> on last order + usual gap.</p>'+
-    '<p>Stock entry is <strong>switched off</strong>: there is nowhere to type your own stock or a customer\u2019s count, and your own stock isn\u2019t tracked.</p>'+
-    '<p class="note">An item without enough orders to know the usual gap shows “—” and “Not enough orders yet”, never 0.</p></div>')+
+    :'<div class="gd-num" id="gdPrep"><h4>Stock: what to prepare</h4>'+
+    '<p>Stock is worked out <strong>only from your orders</strong>. You never type a stock number, and the Stock page never changes your data.</p>'+
+    '<p><strong>What to prepare</strong> = <strong>On order now</strong> (orders that are Pending or Quoted) + <strong>Expected (30 days)</strong> (orders customers are likely to place in the next 30 days, including ones already late).</p>'+
+    '<p>Not counted: customers who stopped ordering, and rough guesses. An expected order that is already inside an open order is counted once, as On order now.</p>'+
+    '<p class="note">The value uses your prices. “Part priced” means some lines have no price yet.</p></div>'+
+    '<div class="gd-num" id="gdCust"><h4>Stock: customer stock</h4>'+
+    '<p>One row for each customer and item, worked out from that customer’s own orders.</p>'+
+    '<p><strong>Daily use</strong> = last order quantity ÷ usual gap between orders (the last order is meant to last one gap).</p>'+
+    '<p><strong>Likely left</strong> = last order quantity − daily use × days since that order, in whole units. It never goes below 0.</p>'+
+    '<p><strong>Days left</strong> = days until <strong>Reorder by</strong> (last order date + usual gap). It never goes below 0.</p>'+
+    '<p><strong>Reorder by</strong> = last order date + usual gap.</p>'+
+    '<p><strong>Status:</strong> <strong>Overdue</strong> = the reorder date has passed · <strong>Due</strong> = within 7 days · <strong>Soon</strong> = within 21 days · <strong>Later</strong> = further away.</p>'+
+    '<p><strong>Rough guess</strong> = the customer ordered this item only once, so I use the customer’s overall ordering rhythm. Treat it as a hint.</p>'+
+    '<p><strong>Stopped ordering</strong> = overdue by more than 45 days <em>and</em> by more than its own usual gap. These rows are kept in a separate list (press “Stopped ordering”) and are not counted in What to prepare. Today shows the same list as “Stopped ordering (win back)”.</p></div>')+
     '<div class="gd-num"><h4>Expected orders</h4><p>For every customer and item that has ordered before, I work out the <strong>usual gap</strong> between orders (kept between 1 week and 6 months) and the <strong>usual quantity</strong> (the middle one). The next order is the last order date plus that gap'+(on?' — sooner if the customer’s own stock count says it runs out':'')+'.</p>'+
-    '<p>After only one order of an item I use the customer’s overall rhythm and mark it low confidence; with no rhythm I make no guess. A customer + item whose last order is more than a year old gets no expected order.</p>'+
-    '<p>If an order is overdue by more than 45 days <em>and</em> by more than its own usual gap, it is <strong>lapsed</strong>: it is not counted as expected and moves to the <strong>Lapsed (win back)</strong> list on Today (press “Show the … lapsed items”).</p></div>'+
+    '<p>After only one order of an item I use the customer’s overall rhythm and mark it a rough guess; with no rhythm I make no guess. A customer + item whose last order is more than a year old gets no expected order.</p>'+
+    '<p>If an order is overdue by more than 45 days <em>and</em> by more than its own usual gap, it is <strong>lapsed</strong>: it is not counted as expected and moves to the <strong>Stopped ordering (win back)</strong> list on Today (press “Show the … items”).</p></div>'+
     '<div class="gd-num"><h4>Targets</h4><p>You type the total for the month. It is split between customers and items partly by <strong>history</strong> (what they bought in the last 6 months) and partly by what they are <strong>expected</strong> to buy that month. The slider sets the mix (70% history to start).</p>'+
     '<p>Add <strong>growth</strong> % to a customer or an item, or give a customer a <strong>fixed</strong> amount; the rest is split between the others. The parts always add up exactly to your total.</p></div>'+
     '<div class="gd-num"><h4>Prices</h4><p>The customer’s <strong>deal</strong> for that item comes first. If there is none, the item’s <strong>standard</strong> discount is used. If neither exists the line says <strong>review required</strong> and cannot be saved until you fix it.</p>'+
@@ -3579,6 +3639,284 @@ RENDER.guide=v43GRender;
   window.addEventListener('resize',v43GResize);document.addEventListener('visibilitychange',v43GResize);})();
 
 window.__v43={V43:V43,V43I:V43I,Imp:Imp,XlsxRead:XlsxRead,data:function(){return D;},today:localDate,planCtx:function(){return v43ICtx();},planOpts:function(t,s,d){derive(Store.all());return v43IOpts(t,s||'own',d);},ordPath:v43OrdPath}; /* test hooks (read-only use) */
+
+/* V45: preserve the published order-driven stock screen while stock entry is off. */
+var OS=(function(){"use strict";
+
+var STATUS_ORDER={overdue:0,due:1,soon:2,later:3,lapsed:4};
+
+function str(x){return x==null?'':String(x);}
+function has(o,k){return Object.prototype.hasOwnProperty.call(o,k);}
+function isNum(x){return typeof x==='number'&&isFinite(x);}
+function toH(x){return Math.round(x*100+1e-9*(x<0?-1:1));}   /* money -> integer halalas */
+function r0(x){return Math.round(x+1e-9);}
+function r2(x){return Math.round(x*100+1e-9)/100;}
+function cmp(a,b){return str(a).localeCompare(str(b));}
+
+function findEng(opts){
+  if(opts&&opts.eng)return opts.eng;
+  if(typeof Eng!=='undefined')return Eng;
+  if(typeof require==='function'){try{return require('./v42_engine.js');}catch(e){}}
+  return null;
+}
+
+/* an open order line: Pending or Quoted, has an item and a positive qty, account not closed */
+function isOpenLine(ctx,o){
+  if(o.status!=='Pending'&&o.status!=='Quoted')return false;
+  if(o.itemId==null||!isNum(o.qty)||!(o.qty>0)||!o.createdAt)return false;
+  var a=ctx.acctByName?ctx.acctByName[o.account]:null;
+  if(a&&a.closed)return false;
+  return true;
+}
+/* value of an open line: stored net, else netUnit*qty, else unknown (null) */
+function lineValue(o){
+  if(isNum(o.net))return o.net;
+  if(isNum(o.netUnit))return o.netUnit*o.qty;
+  return null;
+}
+
+function itemName(ctx,id,fallback){
+  var im=ctx.itemById?ctx.itemById[id]:null;
+  return (im&&im.name)?im.name:(fallback||str(id));
+}
+
+function compute(ctx,opts){
+  opts=opts||{};
+  var E=findEng(opts);
+  if(!E)throw new Error('OS.compute: Eng (v42_engine) not found');
+  var days=isNum(opts.days)&&opts.days>=0?Math.floor(opts.days):30;
+  var today=ctx.today;
+  var horizon=E.addDays(today,days);
+  var i,j,k;
+
+  /* ---------- what to prepare ---------- */
+  var items={},order=[];
+  function slot(id,nameFallback){
+    if(!has(items,id)){
+      items[id]={itemId:id,item:itemName(ctx,id,nameFallback),onOrder:0,expected:0,overdue:0,vH:0,hasV:false,partial:false,accts:{}};
+      order.push(id);
+    }
+    return items[id];
+  }
+  function addValue(s,v){if(v==null){s.partial=true;}else{s.vH+=toH(v);s.hasV=true;}}
+
+  var openQty={};
+  for(i=0;i<ctx.orders.length;i++){
+    var o=ctx.orders[i];
+    if(!isOpenLine(ctx,o))continue;
+    var ok=o.account+'\u0001'+o.itemId;openQty[ok]=(openQty[ok]||0)+o.qty;
+    var s=slot(o.itemId,o.item);
+    s.onOrder+=o.qty;s.accts[o.account]=1;addValue(s,lineValue(o));
+  }
+
+  var P=E.predictions(ctx).rows;
+  for(i=0;i<P.length;i++){
+    var p=P[i];
+    if(p.status==='lapsed'||p.confidence==='low'||p.inPipeline||has(openQty,p.account+'\u0001'+p.itemId))continue;
+    if(!(p.status==='overdue'||p.status==='due'||p.status==='soon'||p.status==='later'))continue;
+    if(!p.nextDate||p.nextDate>horizon)continue;
+    if(!isNum(p.qty)||!(p.qty>0))continue;
+    var t=slot(p.itemId,p.item);
+    t.expected+=p.qty;if(p.status==='overdue')t.overdue+=p.qty;t.accts[p.account]=1;addValue(t,isNum(p.value)?p.value:null);
+  }
+
+  var prows=[],tq=0,tOver=0,tH=0,tHas=false,tPartial=false;
+  for(i=0;i<order.length;i++){
+    var it=items[order[i]],total=it.onOrder+it.expected;
+    if(!(total>0))continue;
+    var names=[];for(k in it.accts){if(has(it.accts,k))names.push(k);}
+    names.sort(cmp);
+    var val=it.hasV?it.vH/100:null;
+    prows.push({itemId:it.itemId,item:it.item,onOrder:it.onOrder,expected:it.expected,overdue:it.overdue,total:total,value:val,partial:it.partial,
+      customers:names.length,accounts:names});
+    tq+=total;tOver+=it.overdue;if(it.hasV){tH+=it.vH;tHas=true;}if(it.partial)tPartial=true;
+  }
+  prows.sort(function(a,b){return(b.total-a.total)||cmp(a.item,b.item);});
+
+  /* ---------- customer stock ---------- */
+  /* last-order qty per pair+date: executed, non-opener, dated lines (same lines the forecast groups) */
+  var perDate={};
+  for(i=0;i<ctx.orders.length;i++){
+    var l=ctx.orders[i];
+    if(l.status!=='Executed'||l.opener||!l.date||l.itemId==null||!isNum(l.qty))continue;
+    var pk=l.account+'\u0001'+l.itemId+'\u0001'+l.date;
+    perDate[pk]=(perDate[pk]||0)+l.qty;
+  }
+  var crow=[],lapsed=[];
+  for(i=0;i<P.length;i++){
+    var q=P[i];
+    var lastQty=has(perDate,q.account+'\u0001'+q.itemId+'\u0001'+q.lastDate)?perDate[q.account+'\u0001'+q.itemId+'\u0001'+q.lastDate]:null;
+    var usual=isNum(q.qty)?q.qty:null,interval=isNum(q.interval)&&q.interval>0?q.interval:null;
+    var ds=E.daysBetween(q.lastDate,today),daysSince=ds==null?null:Math.max(0,ds);
+    var dailyUse=null,left=null,daysLeft=null;
+    var base=lastQty!=null?lastQty:usual;
+    if(base!=null&&interval!=null&&daysSince!=null){
+      /* one simple idea: the last order is meant to last one usual gap */
+      dailyUse=r2(base/interval);
+      left=Math.max(0,Math.floor(base*(interval-daysSince)/interval+1e-9));
+      daysLeft=Math.max(0,interval-daysSince);
+    }
+    var row={account:q.account,accountId:q.accountId,itemId:q.itemId,item:q.item,lastDate:q.lastDate,lastQty:lastQty,usualQty:usual,
+      interval:interval,dailyUse:dailyUse,daysSince:daysSince,left:left,daysLeft:daysLeft,reorderBy:q.nextDate,status:q.status,
+      rough:q.confidence==='low',inPipeline:!!q.inPipeline||has(openQty,q.account+'\u0001'+q.itemId),pipelineQty:isNum(q.pipelineQty)&&q.pipelineQty>0?q.pipelineQty:(has(openQty,q.account+'\u0001'+q.itemId)?openQty[q.account+'\u0001'+q.itemId]:0),
+      value:isNum(q.value)?q.value:null};
+    (q.status==='lapsed'?lapsed:crow).push(row);
+  }
+  function rowCmp(a,b){
+    return((has(STATUS_ORDER,a.status)?STATUS_ORDER[a.status]:9)-(has(STATUS_ORDER,b.status)?STATUS_ORDER[b.status]:9))
+      ||cmp(a.reorderBy,b.reorderBy)||cmp(a.account,b.account)||cmp(a.item,b.item);
+  }
+  crow.sort(rowCmp);lapsed.sort(rowCmp);
+
+  return {today:today,days:days,
+    prepare:{rows:prows,totals:{items:prows.length,qty:tq,overdue:tOver,value:prows.length?(tHas?tH/100:null):0,partial:tPartial}},
+    customers:{rows:crow,lapsed:lapsed}};
+}
+
+return {compute:compute};
+})();
+var OSV={q:'',f:'all',lapsed:false,days:30};
+var OS_LAB={overdue:'Overdue',due:'Due',soon:'Soon',later:'Later',lapsed:'Stopped ordering'};
+var OS_CHIPS=[['all','All'],['overdue','Overdue'],['due','Due'],['soon','Soon']];
+var OS_INTRO='Based only on past orders. When a customer has ordered an item only once, it is a rough guess (not counted in What to prepare).';
+var OS_LAPSED_NOTE='These customers have stopped ordering these items. They are not counted in “What to prepare”. A call may win them back.';
+
+function osOk(){return v42Ok()&&typeof OS!=='undefined'&&OS&&typeof OS.compute==='function';}
+function osPlural(n,w){return INT(n)+' '+w+(n===1?'':'s');}
+/* one result per store change (V42.ctx is dropped on every store change) and per day */
+function osData(){
+  var c=v42Ctx();if(c.today!==localDate()){V42.ctx=null;V42.cache={};}
+  return v42Memo('os'+OSV.days,function(cx){return OS.compute(cx,{days:OSV.days});});
+}
+function osHorizon(){var c=v42Ctx();return Eng.addDays(c.today,OSV.days);}
+function osMoney(v){return v==null?'—':SAR(v);}
+
+/* ---------- the screen ---------- */
+function osSkeleton(){
+  return '<div class="card os-intro"><p class="os-lead" id="osIntro">'+esc(OS_INTRO)+'</p></div>'+
+  '<div class="card os-card" id="osPrepCard"><div class="os-head"><h3>What to prepare — next '+OSV.days+' days</h3><span class="tag">On order now + Expected ('+OSV.days+' days)</span></div>'+
+    '<div id="osPrepBody"></div><div class="os-totals" id="osTotals" role="status" aria-live="polite"></div></div>'+
+  '<div class="card os-card" id="osCustCard"><div class="os-head"><h3>Customer stock</h3><span class="tag">worked out from each customer’s last order</span></div>'+
+    '<div class="os-find"><div class="st-chips" id="osChips" role="group" aria-label="Show customers by status">'+
+      OS_CHIPS.map(function(c){return '<button type="button" class="st-chip" data-oschip="'+c[0]+'" aria-pressed="'+(OSV.f===c[0])+'">'+c[1]+' <span class="n">0</span></button>';}).join('')+'</div>'+
+      '<div class="field"><label for="osSearch">Search customer or item</label><input id="osSearch" type="search" placeholder="Customer or item name…" autocomplete="off" value="'+esc(OSV.q)+'"></div></div>'+
+    '<div class="os-lapsedrow"><button type="button" class="btn ghost sm" id="osLapsed" aria-pressed="'+OSV.lapsed+'">Stopped ordering (0)</button></div>'+
+    '<p class="note os-lnote" id="osLapsedNote"'+(OSV.lapsed?'':' hidden')+'>'+esc(OS_LAPSED_NOTE)+'</p>'+
+    '<div class="os-count" id="osCount" role="status" aria-live="polite"></div>'+
+    '<div id="osCustBody"></div></div>';
+}
+function osPrepHtml(C){
+  var P=C.prepare,i,h;
+  if(!P.rows.length)return '<p class="muted os-empty">Nothing to prepare in the next '+OSV.days+' days. Open orders (Pending or Quoted) and orders you can expect will show here.</p>';
+  h='<div class="os-scroll"><table class="os-table" id="osPrep"><caption class="sr-only">What to prepare in the next '+OSV.days+' days, one row per item</caption><thead><tr><th scope="col">Item</th><th scope="col" class="num">On order now</th><th scope="col" class="num">Expected ('+OSV.days+' days)</th><th scope="col" class="num">Total to prepare</th><th scope="col" class="num">Value SAR</th><th scope="col" class="num">Customers</th></tr></thead><tbody>';
+  for(i=0;i<P.rows.length;i++){var r=P.rows[i];
+    h+='<tr data-item="'+esc(r.itemId)+'"><td class="os-item os-nolab" data-label="Item" title="'+esc(r.item)+'">'+esc(shortItem(r.item))+'</td>'+
+      '<td class="num" data-label="On order now">'+INT(r.onOrder)+'</td><td class="num" data-label="Expected ('+OSV.days+' days)">'+INT(r.expected)+'</td>'+
+      '<td class="num os-total" data-label="Total to prepare"><strong>'+INT(r.total)+'</strong></td>'+
+      '<td class="num" data-label="Value SAR">'+(r.value==null?'<span class="muted" title="No price yet">—</span>':SAR(r.value)+(r.partial?' <span class="os-hint">(part priced)</span>':''))+'</td>'+
+      '<td class="num" data-label="Customers" title="'+esc(r.accounts.join(', '))+'">'+INT(r.customers)+'</td></tr>';}
+  return h+'</tbody></table></div>';
+}
+function osTotalsHtml(C){
+  var T=C.prepare.totals;
+  if(!C.prepare.rows.length)return '';
+  return '<strong>Total</strong> · '+osPlural(T.items,'item')+' · '+osPlural(T.qty,'unit')+' · Value '+(T.value==null?'—':SAR(T.value)+' SAR')+(T.partial&&T.value!=null?' <span class="os-hint">(part priced)</span>':'')+
+    (T.overdue>0?'<span class="os-over" id="osOverdue">of which '+INT(T.overdue)+' unit'+(T.overdue===1?' is':'s are')+' late (customers past their usual reorder date)</span>':'');
+}
+function osRel(d,today){
+  var n=Eng.daysBetween(today,d);
+  if(n==null)return '';
+  return n<0?(-n)+' day'+(n===-1?'':'s')+' late':n===0?'today':'in '+n+' day'+(n===1?'':'s');
+}
+function osCustRow(r,today){
+  var key=r.account+'||'+r.itemId,lab=OS_LAB[r.status]||r.status;
+  var act=r.status==='lapsed'?'<span class="os-onord">—</span>':r.inPipeline?'<span class="os-onord">On order'+(r.pipelineQty>0?' ('+INT(r.pipelineQty)+')':'')+'</span>'
+    :'<button type="button" class="btn ghost sm os-draft" data-osdraft="1" data-osacct="'+esc(r.account)+'" data-osit="'+esc(r.itemId)+'" aria-label="Draft an order for '+esc(r.account)+': '+esc(shortItem(r.item))+'">Draft order</button>';
+  return '<tr data-pair="'+esc(key)+'"'+(r.status==='lapsed'?' class="os-lapsedrowtr"':'')+'>'+
+    '<td class="os-first os-nolab" data-label="Customer">'+esc(r.account)+'</td>'+
+    '<td class="os-item os-nolab" data-label="Item" title="'+esc(r.item)+'">'+esc(shortItem(r.item))+'</td>'+
+    '<td class="os-last" data-label="Last order">'+esc(v42D(r.lastDate))+(r.lastQty!=null?' · '+INT(r.lastQty):'')+'</td>'+
+    '<td class="num" data-label="Likely left">'+INT(r.left)+'</td>'+
+    '<td class="num" data-label="Days left">'+INT(r.daysLeft)+'</td>'+
+    '<td data-label="Reorder by">'+(r.reorderBy?esc(v42D(r.reorderBy))+'<span class="os-rel">'+esc(osRel(r.reorderBy,today))+'</span>':'—')+'</td>'+
+    '<td class="os-stc" data-label="Status"><span class="os-st os-st-'+esc(r.status)+'">'+esc(lab)+'</span>'+(r.rough?' <span class="os-rough" title="Only one order of this item, so the customer’s overall rhythm is used">rough guess</span>':'')+'</td>'+
+    '<td class="os-act">'+act+'</td></tr>';
+}
+function osBase(C){return OSV.lapsed?C.customers.rows.concat(C.customers.lapsed):C.customers.rows;}
+function osFiltered(C){
+  var q=OSV.q.trim().toLowerCase();
+  return osBase(C).filter(function(r){
+    if(OSV.f!=='all'&&r.status!==OSV.f)return false;
+    if(q&&String(r.account).toLowerCase().indexOf(q)<0&&String(r.item).toLowerCase().indexOf(q)<0)return false;
+    return true;});
+}
+function osFillCust(C){
+  var base=osBase(C),rows=osFiltered(C),i,cnt={all:base.length,overdue:0,due:0,soon:0},today=C.today,body=$('osCustBody'),ct=$('osCount');
+  if(!body)return;
+  for(i=0;i<base.length;i++){if(cnt[base[i].status]!=null)cnt[base[i].status]++;}
+  var chips=document.querySelectorAll('#osChips button[data-oschip]');
+  for(i=0;i<chips.length;i++){var k=chips[i].getAttribute('data-oschip'),n=chips[i].querySelector('.n');chips[i].setAttribute('aria-pressed',String(OSV.f===k));if(n)n.textContent=INT(cnt[k]);}
+  var lb=$('osLapsed'),nl=C.customers.lapsed.length;
+  if(lb){lb.textContent='Stopped ordering ('+INT(nl)+')';lb.setAttribute('aria-pressed',String(OSV.lapsed));lb.hidden=!nl;}
+  var ln=$('osLapsedNote');if(ln)ln.hidden=!(OSV.lapsed&&nl);
+  if(!rows.length){
+    body.innerHTML='<p class="muted os-empty">'+(!base.length&&OSV.f==='all'&&!OSV.q.trim()?'No customers to show yet. Customer stock appears once customers have orders.':'No customers match. Clear the search or pick “All”.')+'</p>';
+    ct.textContent=base.length?'0 of '+osPlural(base.length,'row')+' match':'';return;}
+  ct.textContent=rows.length===base.length?'Showing '+osPlural(rows.length,'row'):'Showing '+INT(rows.length)+' of '+osPlural(base.length,'row');
+  body.innerHTML='<div class="os-scroll"><table class="os-table" id="osCust"><caption class="sr-only">Customer stock, one row per customer and item</caption><thead><tr><th scope="col">Customer</th><th scope="col">Item</th><th scope="col">Last order</th><th scope="col" class="num">Likely left</th><th scope="col" class="num">Days left</th><th scope="col">Reorder by</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead><tbody>'+
+    rows.map(function(r){return osCustRow(r,today);}).join('')+'</tbody></table></div>';
+}
+function osFill(){
+  var C=osData(),pb=$('osPrepBody'),tt=$('osTotals');
+  if(pb)pb.innerHTML=osPrepHtml(C);
+  if(tt)tt.innerHTML=osTotalsHtml(C);
+  osFillCust(C);
+}
+function osRender(force){
+  var el=$('stockBody');if(!el)return;
+  if(!osOk()){el.innerHTML='<div class="card"><p class="muted">Stock could not load. Reload the page.</p></div>';el.setAttribute('data-sk','');return;}
+  try{
+    if(force||el.getAttribute('data-sk')!=='os'||!$('osCustCard')||!$('osPrepCard')){el.innerHTML=osSkeleton();el.setAttribute('data-sk','os');}
+    osFill();
+  }catch(e){el.setAttribute('data-sk','');el.innerHTML=v42Err('Stock',e);}
+}
+
+/* ---------- Draft order: fills the normal New order form (nothing is saved until the owner presses Save order) ---------- */
+function osDraft(account,itemId){
+  if(!osOk())return;
+  var rows=osData().customers.rows.concat(osData().customers.lapsed),r=null,i;
+  for(i=0;i<rows.length;i++){if(rows[i].account===account&&rows[i].itemId===itemId){r=rows[i];break;}}
+  var im=itemById[itemId],ok=false;
+  for(i=0;i<obAccount.options.length;i++){if(obAccount.options[i].value===account){ok=true;break;}}
+  if(!ok){toast(esc(account)+' is closed or missing, so no draft was made.','warn');return;}
+  if(!im||im.active===false){toast('That item is switched off, so no draft was made.','warn');return;}
+  var q=(r&&typeof r.usualQty==='number'&&r.usualQty>0)?Math.max(1,Math.round(r.usualQty)):null;
+  show('order');obAccount.value=account;
+  $('obStatus').value='Pending';$('obDate').value=localDate();$('obNotes').value='';lines.innerHTML='';
+  addLine(im.name,q==null?undefined:q);recalc();var sp=$('savedPanel');if(sp)sp.hidden=true;
+  setMsg('reqNote','b-review','Draft for <strong>'+esc(account)+'</strong>: '+esc(shortItem(im.name))+(q==null?'':' × '+INT(q))+', status Pending. Review the quantity, then press Save order. <strong>Nothing is saved yet.</strong>');
+  toast('Draft ready — review and save','good');window.scrollTo(0,0);
+}
+
+/* ---------- wiring (delegated; the page below is rebuilt, the listeners are not) ---------- */
+(function(){
+  var el=$('stockBody');if(!el)return;
+  el.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('button');if(!b)return;
+    if(b.getAttribute('data-osdraft')){osDraft(b.getAttribute('data-osacct'),b.getAttribute('data-osit'));return;}
+    if(b.getAttribute('data-oschip')){OSV.f=b.getAttribute('data-oschip');osFillCust(osData());return;}
+    if(b.id==='osLapsed'){OSV.lapsed=!OSV.lapsed;osFillCust(osData());return;}
+  });
+  el.addEventListener('input',function(e){var t=e.target;if(t&&t.id==='osSearch'){OSV.q=t.value;osFillCust(osData());}});
+})();
+function osTodayTile(){
+  var C=osData(),T=C.prepare.totals;
+  return v42Tile('tdStk','To prepare ('+OSV.days+' days)',osPlural(T.items,'item'),
+    (!C.prepare.rows.length?'Nothing to prepare yet':osPlural(T.qty,'unit')+' · '+(T.value==null?'value not known yet':K(T.value)+' SAR'+(T.partial?' (part priced)':'')))+' · <a href="#" data-tdgo="stock">See Stock</a>');
+}
+window.OS=OS;
+window.__v44={OS:OS,V:OSV,compute:function(){return osData();},render:osRender,horizon:osHorizon,
+  openImportStock:function(){v43OpenImport('stock');return V43I.type;}};
 
 function curView(){var a=document.querySelector('.view.active');return a?a.id.replace('view-',''):'dashboard';}
 function isLoading(){var st=Store.status();return st.mode==='starting'&&!Store.hasSeed();}

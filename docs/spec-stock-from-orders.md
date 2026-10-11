@@ -28,6 +28,18 @@ Expected order = last order + usual interval, at the usual (median) quantity and
 
 ### 1c. Everything else in the engine — unchanged.
 
+## Resumption note — 11 October 2026
+
+The published artifact moved forward after this original spec: version `1791725872-0dd9` adds the order-driven prepare and customer-stock tables. The resumed release preserves that published OFF-mode experience and adds the previously requested owner switch. The following supersedes conflicting OFF-mode presentation bullets below:
+
+- OFF Stock retains two published cards: What to prepare (next 30 days) and Customer stock, including search/status filters and reviewed draft-order actions.
+- OFF Today retains To prepare (30 days); the fixture yields 11 items and 1,873 units. This is planned demand, not measured own stock.
+- OFF does not display manual count fields or stock import controls. ON restores the existing manual-stock experience; switching back OFF restores the published order-driven view.
+- The active published screen omits customer/item rows without an expected order rather than presenting the earlier account-picker/dash-row layout.
+- A switch writes its setting and one audit row. If the audit write fails after the setting succeeds, the dialog must state that partial result and offer history-only retry without repeating the settings write or duplicating the history record.
+- Browsing and cancelling an untouched switch dialog write nothing; confirming the switch is the explicit exception to the older blanket no-new-writes rule.
+- Pricing rules, executed sales, existing order/deal/item/account data remain unchanged.
+
 ## 2. Page — `src/app.js`, `src/page.html`, `src/css/*`
 
 **Switch:** stock entry is ON only when `master/settings` has `stockEntry === true`. Absent or anything else = OFF. The flag is written only by the owner's **Stock entry settings** button on the Stock screen: a details dialog explains what turning it on or off changes; confirming saves `stockEntry` true/false and one audit row (field `stockEntry`, old → new). Cancel writes nothing; nothing is ever deleted.

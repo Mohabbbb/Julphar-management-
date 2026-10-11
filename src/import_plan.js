@@ -35,7 +35,8 @@ function txt(v){return v==null?'':String(v).replace(/\s+/g,' ').replace(/^ | $/g
 function low(v){return txt(v).toLowerCase();}
 function isDashes(s){return /^[-‐-―−]+$/.test(s);}
 function blankText(v){var t=txt(v);return t===''||isDashes(t);}        /* "", "-", "--", en/em dash = no value */
-function round2(x){return Math.round(x*100)/100;}
+/* money rounding is the engine's single rule, Eng.money (also used by New order and the saved lines) */
+function shown(x,opts){var E=getEng(opts);return E&&E.money?E.money(x):Math.round(x*100)/100;}
 function near(a,b){return typeof a==='number'&&typeof b==='number'&&Math.abs(a-b)<TOL;}
 function esc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 
@@ -362,11 +363,11 @@ function planOrder(row,c,S){
   if(p===undefined)return fail(row,'Discount must be between 0 and 100%');
   if(p!==null)src='Imported discount';
   else{
-    var r=typeof S.opts.price==='function'?S.opts.price(row.account.name,row.item.name):null;
+    var r=typeof S.opts.price==='function'?S.opts.price(row.account.name,row.item.name,dt):null;
     if(!r||typeof r.pct!=='number'||!isFinite(r.pct)||r.pct<0||r.pct>1)return fail(row,'No price rule (REVIEW)');
     p=r.pct;src=r.src;
   }
-  row.data={date:dt,status:st,qty:q.qty,pct:p,src:src,rsp:rsp,net:round2(q.qty*rsp*(1-p)),netExact:q.qty*(rsp*(1-p)),notes:note(c('notes'))};
+  row.data={date:dt,status:st,qty:q.qty,pct:p,src:src,rsp:rsp,net:shown(q.qty*(rsp*(1-p)),S.opts),netExact:q.qty*(rsp*(1-p)),notes:note(c('notes'))};
   row.status='ready';row.include=true;
   var k=low(row.account.name)+'\u0001'+dt+'\u0001'+row.item.id+'\u0001'+q.qty;
   var mt=/^matched /.test(row.msg||'')?' · '+row.msg:'';                   /* keep the "matched" note next to the duplicate message */
@@ -443,7 +444,7 @@ function planDeal(row,c,S){
   if(from===undefined)return fail(row,'From date not understood (use day/month/year)');
   if(from===null)from=S.today;
   var cur=S.dealBy[low(row.account.name)+'\u0001'+row.item.id]||null;
-  row.data={pct:p,from:from,rsp:rsp,net:round2(rsp*(1-p)),notes:note(c('notes')),current:cur?cur.id:null};
+  row.data={pct:p,from:from,rsp:rsp,net:shown(rsp*(1-p),S.opts),notes:note(c('notes')),current:cur?cur.id:null};
   if(!cur){row.status='new';row.include=true;}
   else if(near(cur.pct,p)){row.status='same';row.include=false;}
   else{row.status='update';row.include=true;row.changes=[{field:'pct',old:cur.pct,new:p}];}

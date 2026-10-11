@@ -11,8 +11,17 @@ var DEF_CONFIG={startedAt:null,leadDays:7,lowCoverDays:14,horizonDays:30,reserve
 /* ---------- small helpers ---------- */
 function isNum(x){return typeof x==='number'&&isFinite(x);}
 function num(x){if(x==null||x==='')return null;var n=typeof x==='number'?x:Number(x);return isFinite(n)?n:null;}
-function round2(x){return Math.round((x+EPS)*100)/100;}
-function toH(x){return Math.round((x+EPS)*100);}           /* money -> integer halalas */
+/* THE money-rounding rule (used by the engine, the order builder, order saves and imports): 2 decimals, half away from zero.
+   x*100 is first cleaned to 13 significant digits so binary noise (249.97499999999997, 728.6249999999999) cannot turn a half-cent tie into a round-down.
+   Convention for a NEW order line: net = money(qty × exact unit net); the unit net itself stays exact. Lines therefore add up to their total. */
+function money(x){
+  if(typeof x!=='number'||!isFinite(x))return x;
+  var s=x<0?-1:1,h=Math.round(Number((Math.abs(x)*100).toPrecision(13)));
+  return h===0?0:s*h/100;
+}
+/* round2/toH use the same money() rule, so forecasts, target splits and saved orders all round alike (owner decision 2026-10-11). */
+function round2(x){return money(x);}
+function toH(x){return (typeof x!=='number'||!isFinite(x))?x:Math.round(money(x)*100);}   /* money -> integer halalas */
 function copy(o){var r={},k;for(k in o){if(Object.prototype.hasOwnProperty.call(o,k))r[k]=o[k];}return r;}
 function rowsOf(b){return(b&&Object.prototype.toString.call(b.rows)==='[object Array]')?b.rows:[];}
 function str(x){return x==null?'':String(x);}
@@ -688,6 +697,16 @@ function orderTotals(docs){
   }
   return {lines:lines,net:round2(net)};
 }
+/* Restore must not lose history: the audit doc written back is the UNION of the backup's rows and the rows now in the database (same row = identical content),
+   oldest first. History written after the backup was taken therefore stays. */
+function mergeAudit(cur,bak){
+  var seen={},rows=[],src=rowsOf(bak).concat(rowsOf(cur)),i,k,out={};
+  for(i=0;i<src.length;i++){k=stable(src[i]);if(has(seen,k))continue;seen[k]=1;rows.push({r:src[i],i:i});}
+  rows.sort(function(a,b){var x=str(a.r&&a.r.ts),y=str(b.r&&b.r.ts);return x<y?-1:x>y?1:a.i-b.i;});
+  for(k in (bak||{}))if(has(bak,k))out[k]=bak[k];
+  out.rows=rows.map(function(x){return x.r;});
+  return out;
+}
 function backupDiff(cur,bak){
   cur=cur||{};bak=bak||{};
   var add=[],change=[],same=[],onlyCurrent=[],k,i;
@@ -702,7 +721,15 @@ function backupDiff(cur,bak){
   for(k in cur)if(has(cur,k))merged[k]=cur[k];
   for(k in bak)if(has(bak,k))merged[k]=bak[k];
   for(i=0;i<empty.length;i++)merged[empty[i]]={rows:[]};
-  return {add:add,change:change,same:same,onlyCurrent:onlyCurrent,empty:empty,emptyRows:emptyRows,before:orderTotals(cur),after:orderTotals(merged)};
+  /* how many records (order lines, deals, items ...; not history rows) a restore edits, adds or removes */
+  var rec={changed:0,added:0,removed:0},cr,br,byId,j,id;
+  function ids(rs){var m={},n;for(n=0;n<rs.length;n++)if(rs[n]&&rs[n].id!=null)m[rs[n].id]=rs[n];return m;}
+  for(i=0;i<add.concat(change).length;i++){k=add.concat(change)[i];if(/^audit\//.test(k))continue;
+    cr=ids(rowsOf(cur[k]));br=ids(rowsOf(bak[k]));
+    for(id in br)if(has(br,id)){if(!has(cr,id))rec.added++;else if(stable(cr[id])!==stable(br[id]))rec.changed++;}
+    for(id in cr)if(has(cr,id)&&!has(br,id))rec.removed++;}
+  rec.removed+=emptyRows;
+  return {records:rec,add:add,change:change,same:same,onlyCurrent:onlyCurrent,empty:empty,emptyRows:emptyRows,before:orderTotals(cur),after:orderTotals(merged)};
 }
 
 /* ---------- stock stuff exported for UI convenience is limited to the contract ---------- */
@@ -710,9 +737,9 @@ return {
   ctx:ctx,ownStock:ownStock,acctStock:acctStock,predictions:predictions,pipeline:pipeline,
   targetBreakdown:targetBreakdown,targetProgress:targetProgress,alerts:alerts,
   stockPath:stockPath,nextMoveId:nextMoveId,validateMove:validateMove,
-  validateBackup:validateBackup,backupDiff:backupDiff,scope:scope,brand:brand,
+  validateBackup:validateBackup,backupDiff:backupDiff,mergeAudit:mergeAudit,scope:scope,brand:brand,
   daysBetween:daysBetween,addDays:addDays,median:median,
-  round2:round2,addMonths:addMonths,daysInMonth:daysInMonth
+  round2:round2,money:money,addMonths:addMonths,daysInMonth:daysInMonth
 };
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=Eng;
