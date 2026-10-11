@@ -1,0 +1,3 @@
+# Never guess an item, never treat a missing value as zero
+
+When an item name is ambiguous, an account is unknown, or a price or discount is missing, the Platform stops and asks (or flags the line for review). It never picks the closest match and never fills in zero. A blank cell in an import never overwrites a saved value, and an unsigned "1" in a discount column is rejected because it could mean 1% or 100% (free goods). Untracked stock shows "Not tracked", not 0. This makes data entry slightly slower and is deliberate: in pharma pricing a silent wrong guess is far more expensive than a question.
