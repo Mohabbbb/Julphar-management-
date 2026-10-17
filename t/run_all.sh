@@ -6,6 +6,13 @@
 #   4. fixes   python3 t/fixes_test.py (regression tests for the 2026-10-11 fixes F1-F6)
 cd "$(dirname "$0")/.." || exit 2
 
+# Local macOS setup: the repo venv supplies playwright, and the browsers live in
+# the per-user cache. page_test.py and fixes_test.py default to /opt/pw-browsers
+# (a CI path), so the browser path must be set before they run. Both honour a
+# value already in the environment, so CI can still point them elsewhere.
+[ -d .venv/bin ] && export PATH="$PWD/.venv/bin:$PATH"
+export PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/Library/Caches/ms-playwright}"
+
 status=0
 summary=()
 step() {  # step <label> <command...>

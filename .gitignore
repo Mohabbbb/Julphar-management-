@@ -3,3 +3,4 @@ __pycache__/
 t/fixture/
 t/golden/
 .DS_Store
+.venv/
